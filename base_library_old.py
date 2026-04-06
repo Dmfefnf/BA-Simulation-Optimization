@@ -301,6 +301,10 @@ class QueueStation(sim.Queue, BasicStation):
                 direction=queue_direction,
                 max_length=queue_max_length,
                 title="",
+                # title=lambda t: str(len(self.queue)), # TODO
+                # titlecolor=mm.LABEL_COLOR,
+                # titlefont=mm.FONT,
+                # titlefontsize=mm.FONT_SIZE,
             )
             if queue_animate
             else None
@@ -313,13 +317,8 @@ class QueueStation(sim.Queue, BasicStation):
 class ResourceStation(sim.Resource, BasicStation):
     """
     A station that is a Salabim resource and has a graphic representation as rectangle
-    with a label that shows the total number of processed entities and the current
-    number of entities in the resource queue.
+    with a label that shows the total number of processed entities and the current number of entities in the resource queue.
     The station is not a Salabim component and therefore has no process.
-
-    Blocking support: exposes available_quantity_state, a sim.State that always
-    reflects the current available capacity. Other components can wait on it via
-    self.wait((server.available_quantity_state, lambda val, *_: val > 0)).
     """
 
     def __init__(
@@ -334,14 +333,11 @@ class ResourceStation(sim.Resource, BasicStation):
         resource_kwargs = get_kwargs_of_class(sim.Resource, kwargs)
         sim.Resource.__init__(self, **resource_kwargs)
         BasicStation.__init__(self, **kwargs)
-
-        # State tracking available capacity for blocking support.
-        # Initialised to the full capacity; updated in claimed() and released().
-        self.available_quantity_state = sim.State(
+        # Neu: State der verfügbaren Kapazität, damit andere darauf warten können
+        self._available_quantity_state = sim.State(
             name=self.name() + ".available_quantity",
             value=self.capacity(),
         )
-
         self.anim_queue = (
             sim.AnimateQueue(
                 self.requesters(),
@@ -350,27 +346,32 @@ class ResourceStation(sim.Resource, BasicStation):
                 direction=queue_direction,
                 max_length=queue_max_length,
                 title="",
+                # title=lambda t: str(len(self.requesters())),  # TODO
+                # titlecolor=mm.LABEL_COLOR,
+                # titlefont=mm.FONT,
+                # titlefontsize=mm.FONT_SIZE,
             )
             if queue_animate
             else None
         )
 
-    def _sync_available_state(self) -> None:
-        """Keep available_quantity_state in sync with the actual available capacity."""
-        self.available_quantity_state.set(self.available_quantity())
+    def _update_available_state(self):
+        self._available_quantity_state.set(self.available_quantity())
 
-    # Salabim calls these hooks automatically after every claim / release.
+    # Salabim ruft diese Hooks automatisch auf:
     def claimed(self, quantity, claimer):
         super().claimed(quantity, claimer)
-        self._sync_available_state()
+        self._update_available_state()
 
     def released(self, quantity, releaser):
         super().released(quantity, releaser)
-        self._sync_available_state()
+        self._update_available_state()
 
     def label(self) -> str:
-        return (
-            f"cap: {self.claimed_quantity()}/{int(self.capacity())}\n"
-            f"queue: {len(self.requesters())}\n"
-            f"done: {self.claimers().number_of_departures}"
-        )
+        return f"cap: {self.claimed_quantity()}/{int(self.capacity())}\nqueue: {len(self.requesters())}\ndone: {self.claimers().number_of_departures}"
+
+    @property
+    def available_quantity_state(self):
+        return self._available_quantity_state
+
+    

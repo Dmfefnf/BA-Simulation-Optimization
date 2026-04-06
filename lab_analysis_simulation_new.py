@@ -73,94 +73,99 @@ class HourlyRateSource(sim.Component):
 
 class Order(BasicEntity):
     """Represents an order moving through various processing stages in the simulation."""
+
     def __init__(self):
         self.due_date = due_date_assignment_distribution.sample()
-        # self.starting_time = self.env.now()
         self.in_range = True
         super().__init__()
-        
+
     def process(self):
         """Process method defining the path and actions of an order through the system."""
-        # Move to and hold at each server, becoming invisible while moving and visible while processing.
-        # Each step involves requesting a server, updating the fill color to indicate processing, and releasing the server afterwards.
-        # Analysis logic: Orders always get analysis1 OR analysis2 (or both). If analysis1 is chosen,
-        # analysis2 may additionally be performed based on analysis2_post1_fraction. If analysis1 is not chosen,
-        # analysis2 is always performed.
-
         # Assign starting time at the moment the order enters the system
         self.starting_time = self.env.now()
-        # Enter the system
         self.enter(self.env.orders)
 
-        # Enter queue before preparation
-        # self.between_processes(queue=self.env.preparation_queue)
-
-        # Initial preparation stage (performed once, outside the evaluation retry loop)
+        # Preparation stage — next station is always sorting
         self.process_step(
             server=self.env.server_preparation,
             duration_dist=self.env.server_preparation_pt,
             next_server=self.env.server_sorting,
-            n_workers=0,
             mode="preparation",
             new_color="blue",
         )
 
         evaluation_success = False
         while not evaluation_success:
-            # self.between_processes(queue=self.env.sorting_queue)
-            # Sorting stage
-            self.process_step(
-                server=self.env.server_sorting,
-                duration_dist=self.env.server_sorting_pt,
-                n_workers=0,
-                mode="sorting",
-                new_color="dodgerblue",
-            )
 
-            # Analysis stages, chosen based on a binary random choice
+            # Determine which analysis stations will be visited this iteration
+            # so we can pass the correct next_server to each step.
             self.analysis1 = self.env.analysis1_distribution.sample()
             self.analysis2 = (
                 not self.analysis1
             ) or self.env.analysis2_post1_distribution.sample()
+
+            # Sorting — next station depends on which analysis path is taken
+            next_after_sorting = (
+                self.env.server_analysis1 if self.analysis1
+                else self.env.server_analysis2
+            )
+            self.process_step(
+                server=self.env.server_sorting,
+                duration_dist=self.env.server_sorting_pt,
+                next_server=next_after_sorting,
+                mode="sorting",
+                new_color="dodgerblue",
+            )
+
             if self.analysis1:
-                # self.between_processes(queue=self.env.analysis1_queue)
+                # Next station after analysis1: analysis2 if it will be done,
+                # otherwise evaluation
+                next_after_analysis1 = (
+                    self.env.server_analysis2 if self.analysis2
+                    else self.env.server_evaluation
+                )
                 self.process_step(
                     server=self.env.server_analysis1,
                     duration_dist=self.env.server_analysis1_pt,
+                    next_server=next_after_analysis1,
                     n_workers=1,
                     mode="analysis1",
                     new_color="salmon",
                 )
+
             if self.analysis2:
-                # self.between_processes(queue=self.env.analysis2_queue)
                 self.process_step(
                     server=self.env.server_analysis2,
                     duration_dist=self.env.server_analysis2_pt,
+                    next_server=self.env.server_evaluation,
                     n_workers=1,
                     mode="analysis2",
                     new_color="dimgray",
                 )
 
-            # Evaluation stage
-            # self.between_processes(queue=self.env.evaluation_queue)
+            # Evaluation — next station is sorting (retry) or dispatching (success).
+            # We don't know the outcome yet, so we block on whichever is more
+            # conservative: evaluation releases only when *either* sorting or
+            # dispatching has capacity.  The simplest correct approach is to
+            # resolve the outcome first, then wait for the actual next station.
+            evaluation_success = not self.env.eval_failed_distribution.sample()
+            next_after_evaluation = (
+                self.env.server_dispatching if evaluation_success
+                else self.env.server_sorting
+            )
             self.process_step(
                 server=self.env.server_evaluation,
                 duration_dist=self.env.server_evaluation_pt,
-                n_workers=0,
+                next_server=next_after_evaluation,
                 mode="evaluation",
                 new_color="green",
             )
 
-            # Check if the order failed the evaluation stage
-            evaluation_success = not self.env.eval_failed_distribution.sample()
-
-        # Dispatching stage
-        # self.between_processes(queue=self.env.dispatching_queue)
+        # Dispatching stage — last station, no blocking needed
         self.process_step(
             server=self.env.server_dispatching,
             duration_dist=self.env.server_dispatching_pt,
             next_server=None,
-            n_workers=0,
             mode="dispatching",
             new_color="greenyellow",
         )
@@ -168,13 +173,14 @@ class Order(BasicEntity):
         # Order completion, leaving the system
         if (self.env.now() - self.starting_time) > self.due_date:
             self.in_range = False
-            
+
         self.leave(self.env.orders)
 
         if self.in_range:
             self.env.in_date_counter.inc_count()
         else:
             self.env.out_of_date_counter.inc_count()
+
         # Move out of the screen
         self.move_and_hold(
             x1=self.env.server_dispatching.x + 300,
@@ -192,6 +198,22 @@ class Order(BasicEntity):
         mode="processing",
         new_color="green",
     ):
+        """
+        Move to server, request capacity, process, optionally block until the
+        next station has free capacity, then release.
+
+        Args:
+            server:        The ResourceStation to claim for this step.
+            duration_dist: Callable returning the processing duration.
+            next_server:   The ResourceStation that follows this one. If given,
+                           the order will wait (blocking) until that station has
+                           at least one unit of available capacity before releasing
+                           the current server. Pass None for the final step.
+            n_workers:     Number of worker units to additionally claim.
+            mode:          Salabim mode string used for statistics.
+            new_color:     Fill colour applied to the entity during processing.
+        """
+        # Travel to the station
         self.move_and_hold(
             server.x,
             server.y,
@@ -199,10 +221,11 @@ class Order(BasicEntity):
             mode="moving",
         )
         self.invisible()
+
+        # Claim the server (and workers if needed)
         self.request(server, mode="requesting")
         if n_workers > 0:
             self.request((self.env.resource_worker, n_workers), mode="requesting")
-            # draw a rectangle next to the order to represent the workers
             w = sim.AnimateRectangle(
                 spec=(
                     server.x + ENTITY_WIDTH,
@@ -212,32 +235,43 @@ class Order(BasicEntity):
                 ),
                 fillcolor="red",
             )
+
+        # Process
         self.visible()
         duration = duration_dist()
         self.update_fillcolor(new_color, duration=duration)
         self.hold(duration, mode=mode)
+
+        # Release workers
         if n_workers > 0:
             self.release(self.env.resource_worker)
             w.remove()
 
-            # ── Blocking: warte bis nächste Station Kapazität hat ──────────────
+        # ── Blocking: hold the current server until the next one has capacity ──
         if next_server is not None:
-            self.wait(
-                (next_server.available_quantity_state, lambda val, _, __: val > 0),
-                mode="blocked",
-            )
-    # ───────────────────────────────────────────────────────────────────
+            print("next capacity =", next_server.available_quantity_state())
+            print("real resource capacity =", next_server.available_quantity())
+            print("Before wait")
+            # Statt self.wait(...):
+            while next_server.available_quantity() <= 0:
+                self.hold(0.1, mode="blocked")  # kurz warten, dann nochmal prüfen
+            # self.wait(
+            #     (next_server.available_quantity_state, lambda val, *_: val > 0),
+            #     all=True,   # optional bei einer Bedingung
+            #     mode="blocked",
+            #     )           
+        print("After wait")
+            # self.wait(
+            #     (next_server.available_quantity_state, lambda val, *_: val > 0),
+            #     mode="blocked",
+            # )
+        # ───────────────────────────────────────────────────────────────────────
+
         self.release(server)
     
-    def between_processes(
-            self, 
-            queue,
-            duration = 1 * MINUTE,
-    ):
-        # self.request(queue)
-        self.enter(queue)
-        self.hold(duration)
-        self.leave(queue)
+    # def check_capacity(val, *args):
+    #     print("check_capacity called with val =", val, "args =", args)
+    #     return val > 0
 
 
 def simulate(
@@ -477,12 +511,12 @@ def simulate(
 
     # Setup queues for monitoring and collecting statistics
     env.orders = sim.Queue("orders")
-    env.preparation_queue = sim.Queue("preparation_queue", capacity=4)
-    env.sorting_queue = sim.Queue("sorting_queue", capacity=4)
-    env.analysis1_queue = sim.Queue("analysis1_queue", capacity=4)
-    env.analysis2_queue = sim.Queue("analysis2_queue", capacity=4)
-    env.evaluation_queue = sim.Queue("evaluation_queue", capacity=4)
-    env.dispatching_queue = sim.Queue("dispatching_queue", capacity=4)
+    # env.preparation_queue = sim.Queue("preparation_queue", capacity=4)
+    # env.sorting_queue = sim.Queue("sorting_queue", capacity=4)
+    # env.analysis1_queue = sim.Queue("analysis1_queue", capacity=4)
+    # env.analysis2_queue = sim.Queue("analysis2_queue", capacity=4)
+    # env.evaluation_queue = sim.Queue("evaluation_queue", capacity=4)
+    # env.dispatching_queue = sim.Queue("dispatching_queue", capacity=4)
 
     # Initialize the source of orders based on the configuration
     if use_hourly_arrival_rates:
