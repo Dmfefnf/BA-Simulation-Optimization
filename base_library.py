@@ -326,6 +326,8 @@ class ResourceStation(sim.Resource, BasicStation):
         self,
         queue_animate=True,
         queue_max_length=None,
+        first_station = False,
+        last_station = False,
         queue_offset=STATION_QUEUE_OFFSET,
         queue_direction=STATION_QUEUE_DIRECTION,
         **kwargs,
@@ -342,6 +344,8 @@ class ResourceStation(sim.Resource, BasicStation):
             value=self.capacity(),
         )
 
+        self.wait_trigger = sim.State(name=self.name() + ".wait_trigger")
+
         self.anim_queue = (
             sim.AnimateQueue(
                 self.requesters(),
@@ -355,6 +359,9 @@ class ResourceStation(sim.Resource, BasicStation):
             else None
         )
 
+        self.inputbuffer = sim.Resource(name=self.name() + ".inputbuffer", capacity=1)
+        self.outputbuffer = sim.Resource(name=self.name() + ".outputbuffer", capacity=1)
+
     def _sync_available_state(self) -> None:
         """Keep available_quantity_state in sync with the actual available capacity."""
         self.available_quantity_state.set(self.available_quantity())
@@ -367,6 +374,14 @@ class ResourceStation(sim.Resource, BasicStation):
     def released(self, quantity, releaser):
         super().released(quantity, releaser)
         self._sync_available_state()
+
+    # def _sync_available_state(self) -> None:
+    #     """Keep available_quantity_state in sync with the actual available capacity."""
+    #     self.available_quantity_state.set(self.available_quantity())
+    #     # Warte-Orders aufwecken
+    #     for waiter in self.available_quantity_state.waiters():
+    #         if self.available_quantity() > 0:
+    #             waiter.activate()
 
     def label(self) -> str:
         return (
