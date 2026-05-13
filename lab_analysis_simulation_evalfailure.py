@@ -28,25 +28,7 @@ CONST_ARRIVAL_RATE = 500 / DAY  # Constant arrival rate of orders per day
 HOURLY_ARRIVAL_RATES = np.loadtxt("hourly_arrival_rates.csv") / HOUR
 
 due_date_assignment_distribution = sim.Uniform(8 * HOUR, 12 * HOUR)
-# Möglichkeiten für Komplexitätserhöhung:
-# - Mehr Eval Failure: Parameter generell erhöhen + wenn nur eine Analyse gemacht wird möglichkeit das zweite Analyse auch gemacht werden muss um Ergebnis zu sichern
-# - Queue Puffer: Kapazitäten der Server begrenzen und damit Warteschlangen ermöglichen
-# - Due Dates: Problem hier, das dann einfach nach Due Date sortier würde
-# - Mehrere Order Typen: Unterschiedliche Reihenfolge der Stationen, unterschiedliche Bearbeitungszeiten, unterschiedliche Wahrscheinlichkeiten für Eval Failure
-# - Bearbeitungszeit Verteilung erhöhen (also z.B. High zu 6 setzen)
-# - Auftragsverteilung ändern: Ändern wie die Proben ins System kommen, Random, Schichten, fixes Schedule 
 
-# Implementation
-# - Mehr Eval Failure: Erhöhung eval_failed_fraction + Logik in Process Methode andere Analyse zu machen wenn vorherige Fehlgeschlagen ist (macht dies Sinn? (Also sind A1 und A2 2 komplett unterschiedliche Prozesse die unterschiedliches machen?))
-# - Queue Puffer: 
-# - Due Dates: Property Due Date zu Order hinzufügen (fixe Zahl) + Timer der Soll und Ist Zeit vergleicht 
-# - Mehrere Order Typen: Unterschiedliche Reihenfolge der Stationen, unterschiedliche Bearbeitungszeiten, unterschiedliche Wahrscheinlichkeiten für Eval Failure
-# - Bearbeitungszeit Verteilung erhöhen: Einfach die Parameter der Verteilungen erhöhen
-
-# Mögliche Kostenfunktionen
-# - So viel durchlauf wie möglich
-# - So viele Proben die Due Date erreichen wie möglich
-# - So wenig Zeit im System wie möglich
 class HourlyRateSource(sim.Component):
     """A source component that generates orders based on hourly rates."""
 
@@ -73,108 +55,113 @@ class HourlyRateSource(sim.Component):
 
 class Order(BasicEntity):
     """Represents an order moving through various processing stages in the simulation."""
+
     def __init__(self):
         self.due_date = due_date_assignment_distribution.sample()
-        # self.starting_time = self.env.now()
         self.in_range = True
         super().__init__()
-        
+
     def process(self):
         """Process method defining the path and actions of an order through the system."""
-        # Move to and hold at each server, becoming invisible while moving and visible while processing.
-        # Each step involves requesting a server, updating the fill color to indicate processing, and releasing the server afterwards.
-        # Analysis logic: Orders always get analysis1 OR analysis2 (or both). If analysis1 is chosen,
-        # analysis2 may additionally be performed based on analysis2_post1_fraction. If analysis1 is not chosen,
-        # analysis2 is always performed.
 
-        # Assign starting time at the moment the order enters the system
-        self.starting_time = self.env.now()
         # Enter the system
+        self.starting_time = self.env.now()
         self.enter(self.env.orders)
-
-        # Enter queue before preparation
-        # self.between_processes(queue=self.env.preparation_queue)
 
         # Initial preparation stage (performed once, outside the evaluation retry loop)
         self.process_step(
             server=self.env.server_preparation,
+            last_station=None,
             duration_dist=self.env.server_preparation_pt,
-            next_server=self.env.server_sorting,
             n_workers=0,
             mode="preparation",
             new_color="blue",
         )
 
         evaluation_success = False
+        last_station_for_sorting = self.env.server_preparation
+
         while not evaluation_success:
-            # self.between_processes(queue=self.env.sorting_queue)
+
             # Sorting stage
             self.process_step(
                 server=self.env.server_sorting,
+                last_station=last_station_for_sorting,
                 duration_dist=self.env.server_sorting_pt,
                 n_workers=0,
                 mode="sorting",
                 new_color="dodgerblue",
             )
 
-            # Analysis stages, chosen based on a binary random choice
+            # Analysis stages
             self.analysis1 = self.env.analysis1_distribution.sample()
             self.analysis2 = (
                 not self.analysis1
             ) or self.env.analysis2_post1_distribution.sample()
+
+            last_station_for_evaluation = self.env.server_sorting
+
             if self.analysis1:
-                # self.between_processes(queue=self.env.analysis1_queue)
                 self.process_step(
                     server=self.env.server_analysis1,
+                    last_station=self.env.server_sorting,
                     duration_dist=self.env.server_analysis1_pt,
                     n_workers=1,
                     mode="analysis1",
                     new_color="salmon",
                 )
+                last_station_for_evaluation = self.env.server_analysis1
+
             if self.analysis2:
-                # self.between_processes(queue=self.env.analysis2_queue)
                 self.process_step(
                     server=self.env.server_analysis2,
+                    last_station=last_station_for_evaluation,
                     duration_dist=self.env.server_analysis2_pt,
                     n_workers=1,
                     mode="analysis2",
                     new_color="dimgray",
                 )
+                last_station_for_evaluation = self.env.server_analysis2
 
             # Evaluation stage
-            # self.between_processes(queue=self.env.evaluation_queue)
             self.process_step(
                 server=self.env.server_evaluation,
+                last_station=last_station_for_evaluation,
                 duration_dist=self.env.server_evaluation_pt,
                 n_workers=0,
                 mode="evaluation",
                 new_color="green",
             )
 
-            # Check if the order failed the evaluation stage
+            # Check if evaluation failed
             evaluation_success = not self.env.eval_failed_distribution.sample()
 
+            # If evaluation failed, the next sorting step comes from evaluation
+            if not evaluation_success:
+                last_station_for_sorting = self.env.server_evaluation
+
         # Dispatching stage
-        # self.between_processes(queue=self.env.dispatching_queue)
         self.process_step(
             server=self.env.server_dispatching,
+            last_station=self.env.server_evaluation,
             duration_dist=self.env.server_dispatching_pt,
-            next_server=None,
             n_workers=0,
             mode="dispatching",
             new_color="greenyellow",
         )
 
         # Order completion, leaving the system
+        # Order completion, leaving the system
         if (self.env.now() - self.starting_time) > self.due_date:
             self.in_range = False
-            
+
         self.leave(self.env.orders)
 
         if self.in_range:
             self.env.in_date_counter.inc_count()
         else:
             self.env.out_of_date_counter.inc_count()
+
         # Move out of the screen
         self.move_and_hold(
             x1=self.env.server_dispatching.x + 300,
@@ -186,8 +173,8 @@ class Order(BasicEntity):
     def process_step(
         self,
         server,
+        last_station,
         duration_dist,
-        next_server=None,
         n_workers=0,
         mode="processing",
         new_color="green",
@@ -199,7 +186,12 @@ class Order(BasicEntity):
             mode="moving",
         )
         self.invisible()
+        self.request(server.inputbuffer, mode="requesting")
+        if last_station is not None:
+            print(last_station.name(), "->", server.name())
+            self.release(last_station.outputbuffer)
         self.request(server, mode="requesting")
+        self.release(server.inputbuffer)
         if n_workers > 0:
             self.request((self.env.resource_worker, n_workers), mode="requesting")
             # draw a rectangle next to the order to represent the workers
@@ -219,25 +211,8 @@ class Order(BasicEntity):
         if n_workers > 0:
             self.release(self.env.resource_worker)
             w.remove()
-
-            # ── Blocking: warte bis nächste Station Kapazität hat ──────────────
-        if next_server is not None:
-            self.wait(
-                (next_server.available_quantity_state, lambda val, _, __: val > 0),
-                mode="blocked",
-            )
-    # ───────────────────────────────────────────────────────────────────
+        self.request(server.outputbuffer, mode="requesting")
         self.release(server)
-    
-    def between_processes(
-            self, 
-            queue,
-            duration = 1 * MINUTE,
-    ):
-        # self.request(queue)
-        self.enter(queue)
-        self.hold(duration)
-        self.leave(queue)
 
 
 def simulate(
@@ -247,7 +222,7 @@ def simulate(
     random_seed="*",
     animate=False,
     run_duration=1 * DAY,
-    use_hourly_arrival_rates=True,
+    use_hourly_arrival_rates=False,
     rate_multiplier=1,
     analysis1_fraction=0.8,
     analysis2_post1_fraction=0.5,
@@ -385,7 +360,6 @@ def simulate(
         x=250,
         y=300,
         display_name="Sorting",
-        queue_max_length=4,
     )
     env.server_analysis1 = ResourceStation(
         name="Analysis1",
@@ -472,17 +446,10 @@ def simulate(
         high=dispatching_pt_high * MINUTE,
         mode=dispatching_pt_mode * MINUTE,
     )
-    # env.due_date_assignment_distribution = sim.Uniform(8 * HOUR, 12 * HOUR)
     env.transport_duration = transport_duration  # Duration for moving between stations
 
     # Setup queues for monitoring and collecting statistics
     env.orders = sim.Queue("orders")
-    env.preparation_queue = sim.Queue("preparation_queue", capacity=4)
-    env.sorting_queue = sim.Queue("sorting_queue", capacity=4)
-    env.analysis1_queue = sim.Queue("analysis1_queue", capacity=4)
-    env.analysis2_queue = sim.Queue("analysis2_queue", capacity=4)
-    env.evaluation_queue = sim.Queue("evaluation_queue", capacity=4)
-    env.dispatching_queue = sim.Queue("dispatching_queue", capacity=4)
 
     # Initialize the source of orders based on the configuration
     if use_hourly_arrival_rates:
@@ -551,14 +518,14 @@ def simulate(
         "work_in_progress_mean": env.orders.length.mean(),
     }
 
-
+ 
 def load_scenarios(scenario_file_path="scenarios.xlsx", sheet_name="scenarios"):
     """Load simulation scenarios from a CSV or Excel file.
-    
+
     Args:
         scenario_file_path (str): Path to the scenarios file.
         sheet_name (str): Name of the sheet to read from (for Excel files).
-        
+
     Returns:
         pd.DataFrame: DataFrame containing the scenarios.
     """
@@ -576,11 +543,11 @@ def load_scenarios_transposed(
     sheet_name="scenarios",
 ):
     """Load and transpose simulation scenarios from a file.
-    
+
     Args:
         scenario_file_path (str): Path to the scenarios file.
         sheet_name (str): Name of the sheet to read from (for Excel files).
-        
+
     Returns:
         pd.DataFrame: Transposed DataFrame containing the scenarios.
     """
@@ -597,14 +564,14 @@ def run_all_scenarios(
     seed_step=5,
 ):
     """Run multiple simulation scenarios with replications and save results.
-    
+
     Args:
         scenarios_file_path (str): Path to the scenarios file.
         results_output_path (str): Path where results will be saved.
         n_replications (int): Number of replications for each scenario.
         starting_seed (int or str): Starting seed for random number generation. Use "*" for random seeds.
         seed_step (int): Increment between seeds for different replications.
-        
+
     Returns:
         pd.DataFrame: DataFrame containing all simulation results.
     """
@@ -638,13 +605,13 @@ def run_single_scenario(
     **kwargs,
 ):
     """Run a single simulation scenario.
-    
+
     Args:
         scenarios_file_path (str): Path to the scenarios file.
         scenario_nr (int): Scenario number to run.
         animate (bool): Whether to enable animation.
         **kwargs: Additional parameters to override scenario defaults.
-        
+
     Returns:
         pd.Series: Series containing the simulation results.
     """
@@ -676,14 +643,14 @@ if __name__ == "__main__":
     ###########################################################################
     # Run all scenarios (only possible without animation)
     ###########################################################################
-    #df = run_all_scenarios(starting_seed="*", n_replications=10)
-    #df["worker_capacity"] = df["worker_capacity"].astype(int).astype(str)
-    #g = sns.catplot(
-    #    data=df,
-    #    y="time_in_system_mean",
-    #    x="eval_failed_fraction",
-    #    hue="analysis2_post1_fraction",
-    #    col="worker_capacity",
-    #    kind="box",
-    #)
-    #plt.show()
+    # df = run_all_scenarios(starting_seed="*", n_replications=10)
+    # df["worker_capacity"] = df["worker_capacity"].astype(int).astype(str)
+    # g = sns.catplot(
+    #     data=df,
+    #     y="time_in_system_mean",
+    #     x="eval_failed_fraction",
+    #     hue="analysis2_post1_fraction",
+    #     col="worker_capacity",
+    #     kind="box",
+    # )
+    # plt.show()
