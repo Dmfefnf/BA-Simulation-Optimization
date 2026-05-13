@@ -1,0 +1,19 @@
+{
+  "best_parameters": {
+    "preparation_capacity": 2,
+    "sorting_capacity": 3,
+    "analysis1_capacity": 4,
+    "analysis2_capacity": 3,
+    "evaluation_capacity": 5,
+    "dispatching_capacity": 3,
+    "worker_capacity": 8
+  },
+  "best_objective": -5023.793634798609,
+  "aggregated_kpis": {
+    "n_orders_completed_mean": 512.4,
+    "n_orders_late_mean": 0.0,
+    "late_order_fraction_mean": 0.0,
+    "time_in_system_mean_mean": 20.206365201391442,
+    "wip_mean_mean": 7.248638570861452
+  }
+}
