@@ -39,9 +39,10 @@
     "station_capacity": 2.0
   },
   "RUN_DURATION": 1440,
+  "RATE_MULTIPLIER": 0.5,
   "BASE_SEED": 12345,
   "SEED_STEP": 1000,
-  "timestamp": "2026-05-13T16:56:43",
+  "timestamp": "2026-05-23T18:03:04",
   "modules": {
     "bo": "BO.py",
     "simulation": "lab_analysis_simulation_BO.py"

@@ -30,6 +30,7 @@ except ImportError:
 N_TRIALS = 30
 N_REPLICATIONS = 5
 RUN_DURATION = 1 * DAY
+RATE_MULTIPLIER = 0.5
 BASE_SEED = 12345
 SEED_STEP = 1000
 OUTPUT_DIR = "bo_results"
@@ -76,7 +77,7 @@ def setup_logging() -> None:
         ],
     )
 
-
+# Create Ax parameter definitions based on PARAMETER_BOUNDS
 def build_ax_parameters() -> list[dict[str, Any]]:
     return [
         {
@@ -88,7 +89,7 @@ def build_ax_parameters() -> list[dict[str, Any]]:
         for name, bounds in PARAMETER_BOUNDS.items()
     ]
 
-
+# Ensure parameters are integers within bounds
 def sanitize_parameters(parameters: dict[str, Any]) -> dict[str, int]:
     sanitized = {}
     for name, (lower, upper) in PARAMETER_BOUNDS.items():
@@ -96,7 +97,7 @@ def sanitize_parameters(parameters: dict[str, Any]) -> dict[str, int]:
         sanitized[name] = int(np.clip(value, lower, upper))
     return sanitized
 
-
+# Compute the objective value based on KPIs and parameters, applying weights and penalties.
 def compute_objective(kpis: dict[str, Any], parameters: dict[str, int]) -> float:
     time_in_system_mean = kpis.get("time_in_system_mean", np.nan)
     if time_in_system_mean is None or np.isnan(float(time_in_system_mean)):
@@ -115,7 +116,7 @@ def compute_objective(kpis: dict[str, Any], parameters: dict[str, int]) -> float
         + OBJECTIVE_WEIGHTS["station_capacity"] * float(total_station_capacity)
     )
 
-
+# Run a single replication of the simulation with the given parameters and return the results.
 def run_replication(
     parameters: dict[str, int],
     trial_index: int,
@@ -134,6 +135,7 @@ def run_replication(
             **parameters,
             random_seed=seed,
             run_duration=RUN_DURATION,
+            rate_multiplier=RATE_MULTIPLIER,
             animate=False,
             verbose=False,
         )
@@ -158,7 +160,7 @@ def run_replication(
 
     return record
 
-
+# Evaluate a trial by running multiple replications, aggregating results, and saving records.
 def evaluate_trial(parameters: dict[str, Any], trial_index: int) -> dict[str, Any]:
     sanitized = sanitize_parameters(parameters)
     logging.info("Trial %s parameters: %s", trial_index, sanitized)
@@ -241,6 +243,7 @@ def save_config() -> None:
         "PARAMETER_BOUNDS": PARAMETER_BOUNDS,
         "OBJECTIVE_WEIGHTS": OBJECTIVE_WEIGHTS,
         "RUN_DURATION": RUN_DURATION,
+        "RATE_MULTIPLIER": RATE_MULTIPLIER,
         "BASE_SEED": BASE_SEED,
         "SEED_STEP": SEED_STEP,
         "timestamp": datetime.now().isoformat(timespec="seconds"),
@@ -272,7 +275,7 @@ def save_best_result() -> dict[str, Any]:
     )
     return best_result
 
-
+# Create and initialize the AxClient with the experiment definition.
 def create_ax_client() -> AxClient:
     ax_client = AxClient()
     try:
@@ -290,7 +293,7 @@ def create_ax_client() -> AxClient:
         )
     return ax_client
 
-
+# Complete the Ax trial with the computed objective mean and standard error, handling any exceptions gracefully.
 def complete_ax_trial(
     ax_client: AxClient,
     trial_index: int,

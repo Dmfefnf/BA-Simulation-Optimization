@@ -11,16 +11,22 @@ import numpy as np
 import pandas as pd
 
 from RL_agents import BaselineAgent, QLearningAgent, RandomAgent
-from lab_analysis_simulation_RL import DAY, simulate_rl
+from lab_analysis_simulation_RL import (
+    DAY,
+    DUE_DATE_LOWER_BOUND,
+    DUE_DATE_UPPER_BOUND,
+    RATE_MULTIPLIER,
+    simulate_rl,
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 
-N_BASELINE_REPLICATIONS = 5
-N_RANDOM_REPLICATIONS = 3
-N_TRAINING_EPISODES = 100
-N_EVAL_REPLICATIONS = 10
+N_BASELINE_REPLICATIONS = 30
+N_RANDOM_REPLICATIONS = 30
+N_TRAINING_EPISODES = 1000
+N_EVAL_REPLICATIONS = 30
 
-RUN_DURATION = 5 * DAY
+RUN_DURATION = 1 * DAY
 BASE_SEED = 12345
 SEED_STEP = 1000
 
@@ -107,6 +113,9 @@ def main() -> None:
         "N_TRAINING_EPISODES": N_TRAINING_EPISODES,
         "N_EVAL_REPLICATIONS": N_EVAL_REPLICATIONS,
         "RUN_DURATION": RUN_DURATION,
+        "RATE_MULTIPLIER": RATE_MULTIPLIER,
+        "DUE_DATE_LOWER_BOUND": DUE_DATE_LOWER_BOUND,
+        "DUE_DATE_UPPER_BOUND": DUE_DATE_UPPER_BOUND,
         "BASE_SEED": BASE_SEED,
         "SEED_STEP": SEED_STEP,
         "STATION_CAPACITIES": STATION_CAPACITIES,
@@ -127,6 +136,7 @@ def main() -> None:
                     fixed_action=action,
                     training=False,
                     run_duration=RUN_DURATION,
+                    rate_multiplier=RATE_MULTIPLIER,
                     random_seed=seed,
                     **STATION_CAPACITIES,
                 ),
@@ -146,6 +156,7 @@ def main() -> None:
                 agent_type="random",
                 training=False,
                 run_duration=RUN_DURATION,
+                rate_multiplier=RATE_MULTIPLIER,
                 random_seed=seed,
                 **STATION_CAPACITIES,
             ),
@@ -165,6 +176,7 @@ def main() -> None:
                 agent_type="q_learning",
                 training=True,
                 run_duration=RUN_DURATION,
+                rate_multiplier=RATE_MULTIPLIER,
                 random_seed=seed,
                 **STATION_CAPACITIES,
             ),
@@ -186,6 +198,7 @@ def main() -> None:
                 agent_type="q_learning",
                 training=False,
                 run_duration=RUN_DURATION,
+                rate_multiplier=RATE_MULTIPLIER,
                 random_seed=seed,
                 **STATION_CAPACITIES,
             ),

@@ -26,8 +26,10 @@ USE_HOURLY_ARRIVAL_RATES = True
 CONST_ARRIVAL_RATE = 500 / DAY  # Constant arrival rate of orders per day
 # Hourly arrival rates, to be used if USE_HOURLY_ARRIVAL_RATES is True
 HOURLY_ARRIVAL_RATES = np.loadtxt("hourly_arrival_rates.csv") / HOUR
+UPPER_BOUND = 8
+LOWER_BOUND = 4
 
-due_date_assignment_distribution = sim.Uniform(8 * HOUR, 12 * HOUR)
+# due_date_assignment_distribution = sim.Uniform(LOWER_BOUND * HOUR, UPPER_BOUND * HOUR)
 
 class HourlyRateSource(sim.Component):
     """A source component that generates orders based on hourly rates."""
@@ -57,9 +59,11 @@ class Order(BasicEntity):
     """Represents an order moving through various processing stages in the simulation."""
 
     def __init__(self):
-        self.due_date = due_date_assignment_distribution.sample()
-        self.in_range = True
+        # self.due_date = due_date_assignment_distribution.sample()
         super().__init__()
+        self.due_date = self.env.due_date_dist.sample()
+        self.in_range = True
+        
 
     def process(self):
         """Process method defining the path and actions of an order through the system."""
@@ -188,7 +192,7 @@ class Order(BasicEntity):
         self.invisible()
         self.request(server.inputbuffer, mode="requesting")
         if last_station is not None:
-            print(last_station.name(), "->", server.name())
+            # print(last_station.name(), "->", server.name())
             self.release(last_station.outputbuffer)
         self.request(server, mode="requesting")
         self.release(server.inputbuffer)
@@ -448,6 +452,8 @@ def simulate(
     )
     env.transport_duration = transport_duration  # Duration for moving between stations
 
+    env.due_date_dist = sim.Uniform(LOWER_BOUND * HOUR, UPPER_BOUND * HOUR)
+
     # Setup queues for monitoring and collecting statistics
     env.orders = sim.Queue("orders")
 
@@ -516,6 +522,9 @@ def simulate(
         "time_in_system_mean": env.orders.length_of_stay.mean(),
         "work_in_progress_max": env.orders.length.maximum(),
         "work_in_progress_mean": env.orders.length.mean(),
+        "in_date_count": env.in_date_counter.count(),
+        "out_of_date_count": env.out_of_date_counter.count(),
+        # "rate_multiplier": rate_multiplier,
     }
 
  
@@ -633,7 +642,27 @@ if __name__ == "__main__":
     # ###########################################################################
     # # Run a single scenario with animation
     # ###########################################################################
-    print(run_single_scenario())
+    # result = run_single_scenario(random_seed=12345, animate=False)
+    result = simulate(random_seed=12345, animate=False, rate_multiplier=0.5)
+    # print(run_single_scenario(animate=False))
+    print(
+        {
+            "msg": result["msg"],
+            "n_orders_created": result["n_orders_created"],
+            "n_orders_completed": result["n_orders_completed"],
+            "n_orders_in_date": result["in_date_count"],
+            "n_orders_late": result["out_of_date_count"],
+            # In Hours
+            "time_in_system_mean_hour": result["time_in_system_mean"] / HOUR,
+            "time_in_system_max_hour": result["time_in_system_max"] / HOUR,
+            "time_in_system_mean": result["time_in_system_mean"],
+            "time_in_system_max": result["time_in_system_max"],
+            "Upper Bound": UPPER_BOUND,
+            "Lower Bound": LOWER_BOUND,
+            "Rate_mutliplier": result["rate_multiplier"],
+            "fraction_late": result["out_of_date_count"] / result["n_orders_completed"] if result["n_orders_completed"] > 0 else float("nan"),
+        }
+    )
 
     # ###########################################################################
     # ## Run a single scenario without animation

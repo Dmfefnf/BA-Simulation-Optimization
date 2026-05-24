@@ -28,8 +28,9 @@ CONST_ARRIVAL_RATE = 500 / DAY  # Constant arrival rate of orders per day
 BASE_DIR = Path(__file__).resolve().parent
 HOURLY_RATES_PATH = BASE_DIR / "hourly_arrival_rates.csv"
 HOURLY_ARRIVAL_RATES = np.loadtxt(HOURLY_RATES_PATH) / HOUR
-
-due_date_assignment_distribution = sim.Uniform(8 * HOUR, 12 * HOUR)
+UPPER_BOUND = 8
+LOWER_BOUND = 4
+# due_date_assignment_distribution = sim.Uniform(8 * HOUR, 12 * HOUR)
 
 
 class HourlyRateSource(sim.Component):
@@ -60,9 +61,12 @@ class Order(BasicEntity):
     """Represents an order moving through various processing stages in the simulation."""
 
     def __init__(self):
-        self.due_date = due_date_assignment_distribution.sample()
-        self.in_range = True
         super().__init__()
+        # self.due_date = due_date_assignment_distribution.sample()
+        self.due_date = self.env.due_date_dist.sample()
+
+        self.in_range = True
+        
 
     def process(self):
         """Process method defining the path and actions of an order through the system."""
@@ -466,6 +470,7 @@ def simulate(
         mode=dispatching_pt_mode * MINUTE,
     )
     env.transport_duration = transport_duration  # Duration for moving between stations
+    env.due_date_dist = sim.Uniform(LOWER_BOUND * HOUR, UPPER_BOUND * HOUR)
 
     # Setup queues for monitoring and collecting statistics
     env.orders = sim.Queue("orders")
@@ -525,6 +530,8 @@ def simulate(
         "n_orders_completed": n_orders_completed,
         "n_orders_in_date": n_orders_in_date,
         "n_orders_late": n_orders_late,
+        "in_date_count": env.in_date_counter.count(),
+        "out_of_date_count": env.out_of_date_counter.count(),
         "late_order_fraction": late_order_fraction,
         "time_in_system_mean": time_in_system_mean,
         "time_in_system_std": time_in_system_std,
@@ -689,7 +696,8 @@ def run_single_scenario(
 
 
 if __name__ == "__main__":
-    result = simulate(random_seed=12345, animate=False, run_duration=DAY)
+    result = simulate(random_seed=12345, animate=False, run_duration=DAY, rate_multiplier=0.5)
+    # result = run_single_scenario(animate=False)
     print(
         {
             "msg": result["msg"],
@@ -698,5 +706,8 @@ if __name__ == "__main__":
             "late_order_fraction": result["late_order_fraction"],
             "time_in_system_mean": result["time_in_system_mean"],
             "wip_mean": result["wip_mean"],
+            "in_date_count": result["in_date_count"],
+            "out_of_date_count": result["out_of_date_count"],
+            "fraction_late": result["out_of_date_count"] / result["n_orders_completed"] if result["n_orders_completed"] > 0 else float("nan"),
         }
     )

@@ -27,6 +27,9 @@ DAY = 24 * HOUR
 ANIMATION_SPEED = 2
 CONST_ARRIVAL_RATE = 500 / DAY
 DUE_RISK_THRESHOLD = 2 * HOUR
+DUE_DATE_LOWER_BOUND = 4
+DUE_DATE_UPPER_BOUND = 8
+RATE_MULTIPLIER = 0.9
 
 ACTION_NAMES = {
     0: "FIFO",
@@ -346,12 +349,12 @@ def simulate_rl(
     agent_type: str = "baseline",
     fixed_action: int = 0,
     training: bool = False,
-    run_duration: float = 5 * DAY,
+    run_duration: float = 1 * DAY,
     random_seed: int | str | None = None,
     animate: bool = False,
     verbose: bool = False,
     use_hourly_arrival_rates: bool = False,
-    rate_multiplier: float = 1,
+    rate_multiplier: float = RATE_MULTIPLIER,
     analysis1_fraction: float = 0.8,
     analysis2_post1_fraction: float = 0.5,
     eval_failed_fraction: float = 0.1,
@@ -400,7 +403,10 @@ def simulate_rl(
     assert 0 <= analysis2_post1_fraction <= 1
     assert 0 <= eval_failed_fraction <= 1
 
-    env.due_date_assignment_distribution = sim.Uniform(8 * HOUR, 12 * HOUR)
+    env.due_date_assignment_distribution = sim.Uniform(
+        DUE_DATE_LOWER_BOUND * HOUR,
+        DUE_DATE_UPPER_BOUND * HOUR,
+    )
     env.analysis1_distribution = sim.Pdf(
         [True, False], probabilities=[analysis1_fraction, 1 - analysis1_fraction]
     )
@@ -520,6 +526,9 @@ def simulate_rl(
     return {
         "random_seed": random_seed,
         "run_duration": run_duration,
+        "due_date_lower_bound": DUE_DATE_LOWER_BOUND,
+        "due_date_upper_bound": DUE_DATE_UPPER_BOUND,
+        "rate_multiplier": rate_multiplier,
         "agent_type": agent_type,
         "training": training,
         "fixed_action": fixed_action if isinstance(rl_agent, BaselineAgent) else None,
@@ -554,5 +563,12 @@ def simulate_rl(
 
 
 if __name__ == "__main__":
-    result = simulate_rl(random_seed=12345, run_duration=1 * DAY, verbose=True)
+    result = simulate_rl(random_seed=12345, run_duration=1 * DAY, verbose=True, 
+                         preparation_capacity=1, 
+                         sorting_capacity=1, 
+                         analysis1_capacity=1, 
+                         analysis2_capacity=1, 
+                         evaluation_capacity=1, 
+                         dispatching_capacity=1, 
+                         worker_capacity=1)
     print(result)
