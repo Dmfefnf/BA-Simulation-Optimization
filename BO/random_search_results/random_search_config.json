@@ -1,0 +1,51 @@
+{
+  "N_TRIALS": 30,
+  "N_REPLICATIONS": 30,
+  "PARAMETER_BOUNDS": {
+    "preparation_capacity": [
+      1,
+      5
+    ],
+    "sorting_capacity": [
+      1,
+      5
+    ],
+    "analysis1_capacity": [
+      1,
+      5
+    ],
+    "analysis2_capacity": [
+      1,
+      5
+    ],
+    "evaluation_capacity": [
+      1,
+      5
+    ],
+    "dispatching_capacity": [
+      1,
+      5
+    ],
+    "worker_capacity": [
+      1,
+      10
+    ]
+  },
+  "OBJECTIVE_WEIGHTS": {
+    "time_in_system_mean": 1.0,
+    "orders_completed": -10.0,
+    "late_orders": 50.0,
+    "worker_capacity": 5.0,
+    "station_capacity": 2.0
+  },
+  "RUN_DURATION": 1440,
+  "RATE_MULTIPLIER": 0.5,
+  "BASE_SEED": 12345,
+  "SEED_STEP": 1000,
+  "RANDOM_SEARCH_SEED": 54321,
+  "timestamp": "2026-05-25T02:10:06",
+  "modules": {
+    "random_search": "random_search.py",
+    "simulation": "lab_analysis_simulation_BO.py"
+  }
+}
