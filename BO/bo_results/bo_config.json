@@ -1,6 +1,6 @@
 {
   "N_TRIALS": 30,
-  "N_REPLICATIONS": 5,
+  "N_REPLICATIONS": 30,
   "PARAMETER_BOUNDS": {
     "preparation_capacity": [
       1,
@@ -42,7 +42,7 @@
   "RATE_MULTIPLIER": 0.5,
   "BASE_SEED": 12345,
   "SEED_STEP": 1000,
-  "timestamp": "2026-05-23T18:03:04",
+  "timestamp": "2026-05-25T01:37:44",
   "modules": {
     "bo": "BO.py",
     "simulation": "lab_analysis_simulation_BO.py"

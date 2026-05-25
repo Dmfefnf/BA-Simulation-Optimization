@@ -1,19 +1,19 @@
 {
   "best_parameters": {
-    "preparation_capacity": 5,
+    "preparation_capacity": 2,
     "sorting_capacity": 4,
     "analysis1_capacity": 5,
     "analysis2_capacity": 5,
     "evaluation_capacity": 5,
-    "dispatching_capacity": 4,
-    "worker_capacity": 5
+    "dispatching_capacity": 3,
+    "worker_capacity": 7
   },
-  "best_objective": -9805.69703491105,
+  "best_objective": -9820.731689791015,
   "aggregated_kpis": {
-    "n_orders_completed_mean": 991.0,
+    "n_orders_completed_mean": 992.7333333333333,
     "n_orders_late_mean": 0.0,
     "late_order_fraction_mean": 0.0,
-    "time_in_system_mean_mean": 23.302965088949787,
-    "wip_mean_mean": 16.15627398259297
+    "time_in_system_mean_mean": 23.60164354231854,
+    "wip_mean_mean": 16.428269827762737
   }
 }
