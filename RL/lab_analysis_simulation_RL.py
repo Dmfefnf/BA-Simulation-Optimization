@@ -106,6 +106,7 @@ def select_order_by_rule(queue: sim.Queue, action: int, env: sim.Environment):
                 order.queue_enter_time,
             ),
         )
+    # Change desing of late risk by adding threshhold (threshold could be optimzized with BO)
     raise ValueError(f"Unknown action {action}. Valid actions: {sorted(ACTION_NAMES)}")
 
 
