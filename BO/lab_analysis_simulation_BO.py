@@ -516,6 +516,29 @@ def simulate(
         time_in_system_min = np.nan
         time_in_system_max = np.nan
 
+    wip_time_in_system = np.asarray(
+        [
+            env.now() - order.starting_time
+            for order in env.orders
+            if hasattr(order, "starting_time")
+        ],
+        dtype=float,
+    )
+    if len(wip_time_in_system) > 0:
+        wip_time_in_system_mean = float(np.mean(wip_time_in_system))
+        wip_time_in_system_std = (
+            float(np.std(wip_time_in_system, ddof=1))
+            if len(wip_time_in_system) > 1
+            else 0.0
+        )
+        wip_time_in_system_min = float(np.min(wip_time_in_system))
+        wip_time_in_system_max = float(np.max(wip_time_in_system))
+    else:
+        wip_time_in_system_mean = np.nan
+        wip_time_in_system_std = np.nan
+        wip_time_in_system_min = np.nan
+        wip_time_in_system_max = np.nan
+
     n_orders_completed = int(env.n_orders_completed)
     n_orders_in_date = int(env.n_orders_in_date)
     n_orders_late = int(env.n_orders_late)
@@ -542,6 +565,10 @@ def simulate(
         "time_in_system_std": time_in_system_std,
         "time_in_system_min": time_in_system_min,
         "time_in_system_max": time_in_system_max,
+        "wip_time_in_system_mean": wip_time_in_system_mean,
+        "wip_time_in_system_std": wip_time_in_system_std,
+        "wip_time_in_system_min": wip_time_in_system_min,
+        "wip_time_in_system_max": wip_time_in_system_max,
         "wip_mean": wip_mean,
         "wip_max": wip_max,
         "preparation_capacity": preparation_capacity,

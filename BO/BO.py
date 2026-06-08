@@ -19,8 +19,20 @@ except ImportError as exc:
 
 try:
     from lab_analysis_simulation_BO import DAY, simulate
+    from objective_utils import (
+        DEFAULT_OBJECTIVE_WEIGHTS,
+        DUE_DATE_MEAN,
+        VALID_OBJECTIVE_TIME_MODES,
+        calculate_objective_details,
+    )
 except ImportError:
     from lab_analysis_simulation_BO import simulate
+    from objective_utils import (
+        DEFAULT_OBJECTIVE_WEIGHTS,
+        DUE_DATE_MEAN,
+        VALID_OBJECTIVE_TIME_MODES,
+        calculate_objective_details,
+    )
 
     MINUTE = 1
     HOUR = 60 * MINUTE
@@ -35,6 +47,8 @@ BASE_SEED = 12345
 SEED_STEP = 1000
 OUTPUT_DIR = "bo_results"
 FAILED_RUN_PENALTY = 1e9
+# Time modes: "none" (A), "mean" (B), "mean_std" (C).
+OBJECTIVE_TIME_MODE = "mean"
 
 PARAMETER_BOUNDS = {
     "preparation_capacity": (1, 5),
@@ -46,14 +60,8 @@ PARAMETER_BOUNDS = {
     "worker_capacity": (1, 10),
 }
 
-# These weights are experimental and should be calibrated for the business goal.
-OBJECTIVE_WEIGHTS = {
-    "time_in_system_mean": 1.0,
-    "orders_completed": -10.0,
-    "late_orders": 50.0,
-    "worker_capacity": 5.0,
-    "station_capacity": 2.0,
-}
+# Copy the shared defaults so local experiments can override weights here.
+OBJECTIVE_WEIGHTS = DEFAULT_OBJECTIVE_WEIGHTS.copy()
 
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_PATH = BASE_DIR / OUTPUT_DIR
@@ -99,21 +107,13 @@ def sanitize_parameters(parameters: dict[str, Any]) -> dict[str, int]:
 
 # Compute the objective value based on KPIs and parameters, applying weights and penalties.
 def compute_objective(kpis: dict[str, Any], parameters: dict[str, int]) -> float:
-    time_in_system_mean = kpis.get("time_in_system_mean", np.nan)
-    if time_in_system_mean is None or np.isnan(float(time_in_system_mean)):
-        return FAILED_RUN_PENALTY
-
-    total_station_capacity = sum(
-        parameters[name] for name in PARAMETER_BOUNDS if name != "worker_capacity"
-    )
-
     return float(
-        OBJECTIVE_WEIGHTS["time_in_system_mean"] * float(time_in_system_mean)
-        + OBJECTIVE_WEIGHTS["orders_completed"]
-        * float(kpis.get("n_orders_completed", 0))
-        + OBJECTIVE_WEIGHTS["late_orders"] * float(kpis.get("n_orders_late", 0))
-        + OBJECTIVE_WEIGHTS["worker_capacity"] * float(parameters["worker_capacity"])
-        + OBJECTIVE_WEIGHTS["station_capacity"] * float(total_station_capacity)
+        calculate_objective_details(
+            kpis,
+            parameters,
+            OBJECTIVE_WEIGHTS,
+            OBJECTIVE_TIME_MODE,
+        )["objective_value"]
     )
 
 # Run a single replication of the simulation with the given parameters and return the results.
@@ -143,9 +143,17 @@ def run_replication(
         if str(kpis.get("msg", "")).startswith("another exception"):
             error = str(kpis["msg"])
             objective_value = FAILED_RUN_PENALTY
+            objective_details = {}
         else:
-            objective_value = compute_objective(kpis, parameters)
+            objective_details = calculate_objective_details(
+                kpis,
+                parameters,
+                OBJECTIVE_WEIGHTS,
+                OBJECTIVE_TIME_MODE,
+            )
+            objective_value = objective_details["objective_value"]
         record.update(kpis)
+        record.update(objective_details)
         record["objective_value"] = objective_value
         record["error"] = error
     except Exception as exc:
@@ -191,10 +199,32 @@ def evaluate_trial(parameters: dict[str, Any], trial_index: int) -> dict[str, An
 
     for kpi in [
         "n_orders_completed",
+        "n_orders_in_date",
         "n_orders_late",
+        "n_orders_created",
+        "n_orders_incomplete",
         "late_order_fraction",
         "time_in_system_mean",
+        "time_in_system_std",
+        "wip_time_in_system_mean",
+        "wip_time_in_system_std",
+        "wip_time_in_system_min",
+        "wip_time_in_system_max",
         "wip_mean",
+        "work_in_progress_mean",
+        "completed_norm",
+        "late_total_norm",
+        "on_time_loss_norm",
+        "station_capacity_norm",
+        "worker_capacity_norm",
+        "time_in_system_mean_norm",
+        "time_in_system_std_norm",
+        "objective_completed_contribution",
+        "objective_late_contribution",
+        "objective_station_capacity_contribution",
+        "objective_worker_capacity_contribution",
+        "objective_time_mean_contribution",
+        "objective_time_std_contribution",
     ]:
         values = [
             float(record[kpi])
@@ -242,6 +272,9 @@ def save_config() -> None:
         "N_REPLICATIONS": N_REPLICATIONS,
         "PARAMETER_BOUNDS": PARAMETER_BOUNDS,
         "OBJECTIVE_WEIGHTS": OBJECTIVE_WEIGHTS,
+        "OBJECTIVE_TIME_MODE": OBJECTIVE_TIME_MODE,
+        "VALID_OBJECTIVE_TIME_MODES": sorted(VALID_OBJECTIVE_TIME_MODES),
+        "DUE_DATE_MEAN": DUE_DATE_MEAN,
         "RUN_DURATION": RUN_DURATION,
         "RATE_MULTIPLIER": RATE_MULTIPLIER,
         "BASE_SEED": BASE_SEED,
