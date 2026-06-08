@@ -41,6 +41,8 @@ OUTPUT_DIR = "random_search_results"
 FAILED_RUN_PENALTY = 1e9
 # Time modes: "none" (A), "mean" (B), "mean_std" (C).
 OBJECTIVE_TIME_MODE = "mean"
+METHOD = "random_search"
+RUN_INDEX = 0
 
 PARAMETER_BOUNDS = {
     "preparation_capacity": (1, 5),
@@ -75,7 +77,66 @@ def setup_logging() -> None:
             logging.StreamHandler(),
             logging.FileHandler(OUTPUT_PATH / "random_search.log", encoding="utf-8"),
         ],
+        force=True,
     )
+
+
+def configure_output_paths(output_dir: str | Path) -> None:
+    global OUTPUT_DIR, OUTPUT_PATH, TRIALS_CSV, REPLICATIONS_CSV
+    global BEST_PARAMETERS_JSON, CONFIG_JSON
+
+    output_path = Path(output_dir)
+    if not output_path.is_absolute():
+        output_path = BASE_DIR / output_path
+
+    OUTPUT_DIR = str(output_dir)
+    OUTPUT_PATH = output_path
+    TRIALS_CSV = OUTPUT_PATH / "random_search_trials.csv"
+    REPLICATIONS_CSV = OUTPUT_PATH / "random_search_replications.csv"
+    BEST_PARAMETERS_JSON = OUTPUT_PATH / "random_search_best_parameters.json"
+    CONFIG_JSON = OUTPUT_PATH / "random_search_config.json"
+
+
+def configure_experiment(
+    n_trials: int | None = None,
+    n_replications: int | None = None,
+    base_seed: int | None = None,
+    seed_step: int | None = None,
+    output_dir: str | Path | None = None,
+    run_index: int | None = None,
+    run_duration: float | None = None,
+    rate_multiplier: float | None = None,
+    random_search_seed: int | None = None,
+    objective_time_mode: str | None = None,
+) -> None:
+    global N_TRIALS, N_REPLICATIONS, BASE_SEED, SEED_STEP, RUN_INDEX
+    global RUN_DURATION, RATE_MULTIPLIER, RANDOM_SEARCH_SEED, OBJECTIVE_TIME_MODE
+
+    if n_trials is not None:
+        N_TRIALS = int(n_trials)
+    if n_replications is not None:
+        N_REPLICATIONS = int(n_replications)
+    if base_seed is not None:
+        BASE_SEED = int(base_seed)
+    if seed_step is not None:
+        SEED_STEP = int(seed_step)
+    if output_dir is not None:
+        configure_output_paths(output_dir)
+    if run_index is not None:
+        RUN_INDEX = int(run_index)
+    if run_duration is not None:
+        RUN_DURATION = run_duration
+    if rate_multiplier is not None:
+        RATE_MULTIPLIER = float(rate_multiplier)
+    if random_search_seed is not None:
+        RANDOM_SEARCH_SEED = int(random_search_seed)
+    if objective_time_mode is not None:
+        OBJECTIVE_TIME_MODE = objective_time_mode
+
+
+def reset_records() -> None:
+    REPLICATION_RECORDS.clear()
+    TRIAL_RECORDS.clear()
 
 
 def sample_parameters(rng: np.random.Generator) -> dict[str, int]:
@@ -103,6 +164,8 @@ def run_replication(
 ) -> dict[str, Any]:
     seed = BASE_SEED + trial_index * SEED_STEP + replication_index
     record: dict[str, Any] = {
+        "method": METHOD,
+        "run_index": RUN_INDEX,
         "trial_index": trial_index,
         "replication_index": replication_index,
         "seed": seed,
@@ -164,6 +227,8 @@ def evaluate_trial(parameters: dict[str, int], trial_index: int) -> dict[str, An
     valid_records = [record for record in replication_records if not record.get("error")]
 
     trial_record: dict[str, Any] = {
+        "method": METHOD,
+        "run_index": RUN_INDEX,
         "trial_index": trial_index,
         **parameters,
         "objective_mean": float(np.mean(objectives)),
@@ -266,6 +331,8 @@ def save_config() -> None:
         "BASE_SEED": BASE_SEED,
         "SEED_STEP": SEED_STEP,
         "RANDOM_SEARCH_SEED": RANDOM_SEARCH_SEED,
+        "METHOD": METHOD,
+        "RUN_INDEX": RUN_INDEX,
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "modules": {
             "random_search": Path(__file__).name,
@@ -281,6 +348,8 @@ def save_best_result() -> dict[str, Any]:
 
     best = min(TRIAL_RECORDS, key=lambda record: record["objective_mean"])
     best_result = {
+        "method": METHOD,
+        "run_index": RUN_INDEX,
         "best_parameters": {name: best[name] for name in PARAMETER_BOUNDS},
         "best_objective": best["objective_mean"],
         "aggregated_kpis": {
@@ -297,6 +366,36 @@ def save_best_result() -> dict[str, Any]:
 
 
 def main() -> None:
+    result = run_experiment()
+    print("Best random-search parameters:")
+    print(json.dumps(json_safe(result["best_result"]), indent=2))
+
+
+def run_experiment(
+    n_trials: int | None = None,
+    n_replications: int | None = None,
+    base_seed: int | None = None,
+    output_dir: str | Path | None = None,
+    run_index: int | None = None,
+    seed_step: int | None = None,
+    random_search_seed: int | None = None,
+    run_duration: float | None = None,
+    rate_multiplier: float | None = None,
+    objective_time_mode: str | None = None,
+) -> dict[str, Any]:
+    configure_experiment(
+        n_trials=n_trials,
+        n_replications=n_replications,
+        base_seed=base_seed,
+        seed_step=seed_step,
+        output_dir=output_dir,
+        run_index=run_index,
+        run_duration=run_duration,
+        rate_multiplier=rate_multiplier,
+        random_search_seed=random_search_seed,
+        objective_time_mode=objective_time_mode,
+    )
+    reset_records()
     setup_logging()
     save_config()
     rng = np.random.default_rng(RANDOM_SEARCH_SEED)
@@ -306,8 +405,14 @@ def main() -> None:
         evaluate_trial(parameters, trial_index)
 
     best_result = save_best_result()
-    print("Best random-search parameters:")
-    print(json.dumps(json_safe(best_result), indent=2))
+    return {
+        "method": METHOD,
+        "run_index": RUN_INDEX,
+        "output_path": OUTPUT_PATH,
+        "trials": list(TRIAL_RECORDS),
+        "replications": list(REPLICATION_RECORDS),
+        "best_result": best_result,
+    }
 
 
 if __name__ == "__main__":

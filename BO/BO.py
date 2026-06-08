@@ -1,6 +1,7 @@
 import json
 import logging
 import math
+import random
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -45,10 +46,13 @@ RUN_DURATION = 1 * DAY
 RATE_MULTIPLIER = 0.5
 BASE_SEED = 12345
 SEED_STEP = 1000
+BO_RANDOM_SEED = 24680
 OUTPUT_DIR = "bo_results"
 FAILED_RUN_PENALTY = 1e9
 # Time modes: "none" (A), "mean" (B), "mean_std" (C).
 OBJECTIVE_TIME_MODE = "mean"
+METHOD = "bo"
+RUN_INDEX = 0
 
 PARAMETER_BOUNDS = {
     "preparation_capacity": (1, 5),
@@ -83,7 +87,66 @@ def setup_logging() -> None:
             logging.StreamHandler(),
             logging.FileHandler(OUTPUT_PATH / "bo.log", encoding="utf-8"),
         ],
+        force=True,
     )
+
+
+def configure_output_paths(output_dir: str | Path) -> None:
+    global OUTPUT_DIR, OUTPUT_PATH, TRIALS_CSV, REPLICATIONS_CSV
+    global BEST_PARAMETERS_JSON, CONFIG_JSON
+
+    output_path = Path(output_dir)
+    if not output_path.is_absolute():
+        output_path = BASE_DIR / output_path
+
+    OUTPUT_DIR = str(output_dir)
+    OUTPUT_PATH = output_path
+    TRIALS_CSV = OUTPUT_PATH / "bo_trials.csv"
+    REPLICATIONS_CSV = OUTPUT_PATH / "bo_replications.csv"
+    BEST_PARAMETERS_JSON = OUTPUT_PATH / "bo_best_parameters.json"
+    CONFIG_JSON = OUTPUT_PATH / "bo_config.json"
+
+
+def configure_experiment(
+    n_trials: int | None = None,
+    n_replications: int | None = None,
+    base_seed: int | None = None,
+    seed_step: int | None = None,
+    output_dir: str | Path | None = None,
+    run_index: int | None = None,
+    run_duration: float | None = None,
+    rate_multiplier: float | None = None,
+    bo_random_seed: int | None = None,
+    objective_time_mode: str | None = None,
+) -> None:
+    global N_TRIALS, N_REPLICATIONS, BASE_SEED, SEED_STEP, RUN_INDEX
+    global RUN_DURATION, RATE_MULTIPLIER, BO_RANDOM_SEED, OBJECTIVE_TIME_MODE
+
+    if n_trials is not None:
+        N_TRIALS = int(n_trials)
+    if n_replications is not None:
+        N_REPLICATIONS = int(n_replications)
+    if base_seed is not None:
+        BASE_SEED = int(base_seed)
+    if seed_step is not None:
+        SEED_STEP = int(seed_step)
+    if output_dir is not None:
+        configure_output_paths(output_dir)
+    if run_index is not None:
+        RUN_INDEX = int(run_index)
+    if run_duration is not None:
+        RUN_DURATION = run_duration
+    if rate_multiplier is not None:
+        RATE_MULTIPLIER = float(rate_multiplier)
+    if bo_random_seed is not None:
+        BO_RANDOM_SEED = int(bo_random_seed)
+    if objective_time_mode is not None:
+        OBJECTIVE_TIME_MODE = objective_time_mode
+
+
+def reset_records() -> None:
+    REPLICATION_RECORDS.clear()
+    TRIAL_RECORDS.clear()
 
 # Create Ax parameter definitions based on PARAMETER_BOUNDS
 def build_ax_parameters() -> list[dict[str, Any]]:
@@ -124,6 +187,8 @@ def run_replication(
 ) -> dict[str, Any]:
     seed = BASE_SEED + trial_index * SEED_STEP + replication_index
     record: dict[str, Any] = {
+        "method": METHOD,
+        "run_index": RUN_INDEX,
         "trial_index": trial_index,
         "replication_index": replication_index,
         "seed": seed,
@@ -188,6 +253,8 @@ def evaluate_trial(parameters: dict[str, Any], trial_index: int) -> dict[str, An
     ]
 
     trial_record: dict[str, Any] = {
+        "method": METHOD,
+        "run_index": RUN_INDEX,
         "trial_index": trial_index,
         **sanitized,
         "objective_mean": float(np.mean(objectives)),
@@ -233,15 +300,26 @@ def evaluate_trial(parameters: dict[str, Any], trial_index: int) -> dict[str, An
         ]
         trial_record[f"{kpi}_mean"] = float(np.mean(values)) if values else np.nan
 
+    previous_best = min(
+        (record["objective_mean"] for record in TRIAL_RECORDS),
+        default=math.inf,
+    )
+    trial_record["best_objective_so_far"] = min(
+        previous_best,
+        trial_record["objective_mean"],
+    )
+
     TRIAL_RECORDS.append(trial_record)
     save_results()
     logging.info(
-        "Trial %s objective mean %.3f std %.3f valid replications %s/%s",
+        "Run %s trial %s objective mean %.3f std %.3f valid replications %s/%s best so far %.3f",
+        RUN_INDEX,
         trial_index,
         trial_record["objective_mean"],
         trial_record["objective_std"],
         trial_record["n_valid_replications"],
         N_REPLICATIONS,
+        trial_record["best_objective_so_far"],
     )
     return trial_record
 
@@ -279,6 +357,9 @@ def save_config() -> None:
         "RATE_MULTIPLIER": RATE_MULTIPLIER,
         "BASE_SEED": BASE_SEED,
         "SEED_STEP": SEED_STEP,
+        "BO_RANDOM_SEED": BO_RANDOM_SEED,
+        "METHOD": METHOD,
+        "RUN_INDEX": RUN_INDEX,
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "modules": {
             "bo": Path(__file__).name,
@@ -294,6 +375,8 @@ def save_best_result() -> dict[str, Any]:
 
     best = min(TRIAL_RECORDS, key=lambda record: record["objective_mean"])
     best_result = {
+        "method": METHOD,
+        "run_index": RUN_INDEX,
         "best_parameters": {name: best[name] for name in PARAMETER_BOUNDS},
         "best_objective": best["objective_mean"],
         "aggregated_kpis": {
@@ -309,8 +392,14 @@ def save_best_result() -> dict[str, Any]:
     return best_result
 
 # Create and initialize the AxClient with the experiment definition.
-def create_ax_client() -> AxClient:
-    ax_client = AxClient()
+def create_ax_client(random_seed: int | None = None) -> AxClient:
+    if random_seed is not None:
+        random.seed(random_seed)
+        np.random.seed(random_seed)
+    try:
+        ax_client = AxClient(random_seed=random_seed)
+    except TypeError:
+        ax_client = AxClient()
     try:
         ax_client.create_experiment(
             name="lab_analysis_capacity_optimization",
@@ -346,9 +435,39 @@ def complete_ax_trial(
 
 
 def main() -> None:
+    result = run_experiment()
+    print("Best parameters:")
+    print(json.dumps(json_safe(result["best_result"]), indent=2))
+
+
+def run_experiment(
+    n_trials: int | None = None,
+    n_replications: int | None = None,
+    base_seed: int | None = None,
+    output_dir: str | Path | None = None,
+    run_index: int | None = None,
+    seed_step: int | None = None,
+    bo_random_seed: int | None = None,
+    run_duration: float | None = None,
+    rate_multiplier: float | None = None,
+    objective_time_mode: str | None = None,
+) -> dict[str, Any]:
+    configure_experiment(
+        n_trials=n_trials,
+        n_replications=n_replications,
+        base_seed=base_seed,
+        seed_step=seed_step,
+        output_dir=output_dir,
+        run_index=run_index,
+        run_duration=run_duration,
+        rate_multiplier=rate_multiplier,
+        bo_random_seed=bo_random_seed,
+        objective_time_mode=objective_time_mode,
+    )
+    reset_records()
     setup_logging()
     save_config()
-    ax_client = create_ax_client()
+    ax_client = create_ax_client(BO_RANDOM_SEED)
 
     for _ in range(N_TRIALS):
         parameters, trial_index = ax_client.get_next_trial()
@@ -361,8 +480,14 @@ def main() -> None:
         )
 
     best_result = save_best_result()
-    print("Best parameters:")
-    print(json.dumps(json_safe(best_result), indent=2))
+    return {
+        "method": METHOD,
+        "run_index": RUN_INDEX,
+        "output_path": OUTPUT_PATH,
+        "trials": list(TRIAL_RECORDS),
+        "replications": list(REPLICATION_RECORDS),
+        "best_result": best_result,
+    }
 
 
 if __name__ == "__main__":
