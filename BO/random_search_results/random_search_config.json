@@ -32,18 +32,28 @@
     ]
   },
   "OBJECTIVE_WEIGHTS": {
-    "time_in_system_mean": 1.0,
-    "orders_completed": -10.0,
-    "late_orders": 50.0,
-    "worker_capacity": 5.0,
-    "station_capacity": 2.0
+    "completed": 1.0,
+    "late_total": 3.0,
+    "station_capacity": 0.8,
+    "worker_capacity": 0.35,
+    "time_in_system_mean": 0.4,
+    "time_in_system_std": 0.2
   },
+  "OBJECTIVE_TIME_MODE": "mean",
+  "VALID_OBJECTIVE_TIME_MODES": [
+    "mean",
+    "mean_std",
+    "none"
+  ],
+  "DUE_DATE_MEAN": 360,
   "RUN_DURATION": 1440,
   "RATE_MULTIPLIER": 0.5,
   "BASE_SEED": 12345,
   "SEED_STEP": 1000,
   "RANDOM_SEARCH_SEED": 54321,
-  "timestamp": "2026-05-25T02:10:06",
+  "METHOD": "random_search",
+  "RUN_INDEX": 0,
+  "timestamp": "2026-06-08T23:10:18",
   "modules": {
     "random_search": "random_search.py",
     "simulation": "lab_analysis_simulation_BO.py"
