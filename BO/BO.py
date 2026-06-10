@@ -53,6 +53,7 @@ FAILED_RUN_PENALTY = 1e9
 OBJECTIVE_TIME_MODE = "mean"
 METHOD = "bo"
 RUN_INDEX = 0
+SAVE_AFTER_EACH_TRIAL = True
 
 PARAMETER_BOUNDS = {
     "preparation_capacity": (1, 5),
@@ -76,6 +77,11 @@ CONFIG_JSON = OUTPUT_PATH / "bo_config.json"
 
 REPLICATION_RECORDS: list[dict[str, Any]] = []
 TRIAL_RECORDS: list[dict[str, Any]] = []
+
+LARGE_REPLICATION_FIELDS = {
+    "queue_preparation_length_tx",
+    "queue_preparation_length_resampled",
+}
 
 
 def setup_logging() -> None:
@@ -118,9 +124,11 @@ def configure_experiment(
     rate_multiplier: float | None = None,
     bo_random_seed: int | None = None,
     objective_time_mode: str | None = None,
+    save_after_each_trial: bool | None = None,
 ) -> None:
     global N_TRIALS, N_REPLICATIONS, BASE_SEED, SEED_STEP, RUN_INDEX
     global RUN_DURATION, RATE_MULTIPLIER, BO_RANDOM_SEED, OBJECTIVE_TIME_MODE
+    global SAVE_AFTER_EACH_TRIAL
 
     if n_trials is not None:
         N_TRIALS = int(n_trials)
@@ -142,11 +150,18 @@ def configure_experiment(
         BO_RANDOM_SEED = int(bo_random_seed)
     if objective_time_mode is not None:
         OBJECTIVE_TIME_MODE = objective_time_mode
+    if save_after_each_trial is not None:
+        SAVE_AFTER_EACH_TRIAL = bool(save_after_each_trial)
 
 
 def reset_records() -> None:
     REPLICATION_RECORDS.clear()
     TRIAL_RECORDS.clear()
+
+
+def remove_large_replication_fields(record: dict[str, Any]) -> None:
+    for field in LARGE_REPLICATION_FIELDS:
+        record.pop(field, None)
 
 # Create Ax parameter definitions based on PARAMETER_BOUNDS
 def build_ax_parameters() -> list[dict[str, Any]]:
@@ -219,6 +234,7 @@ def run_replication(
             objective_value = objective_details["objective_value"]
         record.update(kpis)
         record.update(objective_details)
+        remove_large_replication_fields(record)
         record["objective_value"] = objective_value
         record["error"] = error
     except Exception as exc:
@@ -310,7 +326,8 @@ def evaluate_trial(parameters: dict[str, Any], trial_index: int) -> dict[str, An
     )
 
     TRIAL_RECORDS.append(trial_record)
-    save_results()
+    if SAVE_AFTER_EACH_TRIAL:
+        save_results()
     logging.info(
         "Run %s trial %s objective mean %.3f std %.3f valid replications %s/%s best so far %.3f",
         RUN_INDEX,
@@ -360,6 +377,8 @@ def save_config() -> None:
         "BO_RANDOM_SEED": BO_RANDOM_SEED,
         "METHOD": METHOD,
         "RUN_INDEX": RUN_INDEX,
+        "SAVE_AFTER_EACH_TRIAL": SAVE_AFTER_EACH_TRIAL,
+        "LARGE_REPLICATION_FIELDS_REMOVED": sorted(LARGE_REPLICATION_FIELDS),
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "modules": {
             "bo": Path(__file__).name,
@@ -451,6 +470,8 @@ def run_experiment(
     run_duration: float | None = None,
     rate_multiplier: float | None = None,
     objective_time_mode: str | None = None,
+    save_after_each_trial: bool | None = None,
+    return_records: bool = True,
 ) -> dict[str, Any]:
     configure_experiment(
         n_trials=n_trials,
@@ -463,6 +484,7 @@ def run_experiment(
         rate_multiplier=rate_multiplier,
         bo_random_seed=bo_random_seed,
         objective_time_mode=objective_time_mode,
+        save_after_each_trial=save_after_each_trial,
     )
     reset_records()
     setup_logging()
@@ -479,13 +501,22 @@ def run_experiment(
             trial_record["objective_std"],
         )
 
+    if not SAVE_AFTER_EACH_TRIAL:
+        save_results()
+
     best_result = save_best_result()
+    trials = list(TRIAL_RECORDS) if return_records else []
+    replications = list(REPLICATION_RECORDS) if return_records else []
+    if not return_records:
+        reset_records()
+    logging.shutdown()
+
     return {
         "method": METHOD,
         "run_index": RUN_INDEX,
         "output_path": OUTPUT_PATH,
-        "trials": list(TRIAL_RECORDS),
-        "replications": list(REPLICATION_RECORDS),
+        "trials": trials,
+        "replications": replications,
         "best_result": best_result,
     }
 

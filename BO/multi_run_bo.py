@@ -1,15 +1,14 @@
 from pathlib import Path
-from typing import Any
-
-import pandas as pd
-
-import BO as bo
+import subprocess
+import sys
 
 
 N_RUNS = 20
-N_TRIALS = bo.N_TRIALS
-N_REPLICATIONS = bo.N_REPLICATIONS
+N_TRIALS = 30
+N_REPLICATIONS = 30
 MULTI_RUN_OUTPUT_DIR = "multi_run_results"
+COMBINE_AFTER_RUNS = False
+SKIP_COMPLETED_RUNS = False
 
 BASE_SIMULATION_SEED = 12345
 RUN_SEED_STEP = 100_000
@@ -18,95 +17,82 @@ BO_RANDOM_SEED_STEP = 1_000
 
 BASE_DIR = Path(__file__).resolve().parent
 RESULTS_DIR = BASE_DIR / MULTI_RUN_OUTPUT_DIR
+RUN_SINGLE_SCRIPT = BASE_DIR / "run_single_bo.py"
 
 
 def run_output_dir(run_index: int) -> Path:
     return RESULTS_DIR / "bo" / f"run_{run_index:02d}"
 
 
-def save_records(records: list[dict[str, Any]], output_path: Path) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(records).to_csv(output_path, index=False)
-
-
-def save_summary() -> None:
-    summary_frames = []
-    for path in [
-        RESULTS_DIR / "bo_all_trials.csv",
-        RESULTS_DIR / "random_search_all_trials.csv",
-    ]:
-        if not path.exists():
-            continue
-        trials = pd.read_csv(path)
-        if trials.empty:
-            continue
-        final_trials = (
-            trials.sort_values(["method", "run_index", "trial_index"])
-            .groupby(["method", "run_index"], as_index=False)
-            .tail(1)
-            .copy()
-        )
-        final_trials["final_best_objective"] = final_trials[
-            "best_objective_so_far"
+def run_completed(run_index: int) -> bool:
+    output_dir = run_output_dir(run_index)
+    return all(
+        [
+            (output_dir / "bo_best_parameters.json").exists(),
+            (output_dir / "bo_trials.csv").exists(),
+            (output_dir / "bo_replications.csv").exists(),
         ]
-        summary_frames.append(final_trials)
-
-    if not summary_frames:
-        return
-
-    summary = pd.concat(summary_frames, ignore_index=True, sort=False)
-    preferred_columns = [
-        "method",
-        "run_index",
-        "final_best_objective",
-        "objective_mean",
-        "objective_std",
-        "n_valid_replications",
-        *bo.PARAMETER_BOUNDS.keys(),
-    ]
-    preferred_columns.extend(
-        column
-        for column in summary.columns
-        if column.endswith("_mean") and column not in preferred_columns
     )
-    columns = [column for column in preferred_columns if column in summary.columns]
-    summary[columns].to_csv(RESULTS_DIR / "summary.csv", index=False)
+
+
+def build_run_command(
+    run_index: int,
+    n_trials: int,
+    n_replications: int,
+) -> list[str]:
+    return [
+        sys.executable,
+        str(RUN_SINGLE_SCRIPT),
+        "--run-index",
+        str(run_index),
+        "--n-trials",
+        str(n_trials),
+        "--n-replications",
+        str(n_replications),
+        "--base-seed",
+        str(BASE_SIMULATION_SEED + run_index * RUN_SEED_STEP),
+        "--bo-random-seed",
+        str(BASE_BO_RANDOM_SEED + run_index * BO_RANDOM_SEED_STEP),
+        "--output-dir",
+        str(run_output_dir(run_index)),
+    ]
 
 
 def run_all(
     n_runs: int = N_RUNS,
     n_trials: int = N_TRIALS,
     n_replications: int = N_REPLICATIONS,
-) -> dict[str, pd.DataFrame]:
+) -> dict[str, Path]:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    all_trials: list[dict[str, Any]] = []
-    all_replications: list[dict[str, Any]] = []
 
     for run_index in range(n_runs):
-        result = bo.run_experiment(
-            n_trials=n_trials,
-            n_replications=n_replications,
-            base_seed=BASE_SIMULATION_SEED + run_index * RUN_SEED_STEP,
-            bo_random_seed=BASE_BO_RANDOM_SEED + run_index * BO_RANDOM_SEED_STEP,
-            output_dir=run_output_dir(run_index),
-            run_index=run_index,
-        )
-        all_trials.extend(result["trials"])
-        all_replications.extend(result["replications"])
+        if SKIP_COMPLETED_RUNS and run_completed(run_index):
+            print(f"Skipping completed BO run {run_index}.", flush=True)
+            continue
 
-        save_records(all_trials, RESULTS_DIR / "bo_all_trials.csv")
-        save_records(all_replications, RESULTS_DIR / "bo_all_replications.csv")
-        save_summary()
+        print(f"Starting BO run {run_index}.", flush=True)
+        subprocess.run(
+            build_run_command(run_index, n_trials, n_replications),
+            check=True,
+            cwd=BASE_DIR,
+        )
+
+    if COMBINE_AFTER_RUNS:
+        from combine_multi_run_results import combine_all_results
+
+        combine_all_results(methods=("bo",))
 
     return {
-        "trials": pd.DataFrame(all_trials),
-        "replications": pd.DataFrame(all_replications),
+        "runs_dir": RESULTS_DIR / "bo",
+        "results_dir": RESULTS_DIR,
     }
 
 
 def main() -> None:
     run_all()
-    print(f"BO multi-run results written to {RESULTS_DIR}")
+    print(f"BO run folders written to {RESULTS_DIR / 'bo'}", flush=True)
+    if not COMBINE_AFTER_RUNS:
+        print("Combine results later with: python combine_multi_run_results.py", flush=True)
 
 
 if __name__ == "__main__":
