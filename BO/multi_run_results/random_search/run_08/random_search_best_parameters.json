@@ -1,0 +1,43 @@
+{
+  "method": "random_search",
+  "run_index": 8,
+  "best_parameters": {
+    "preparation_capacity": 3,
+    "sorting_capacity": 4,
+    "analysis1_capacity": 3,
+    "analysis2_capacity": 3,
+    "evaluation_capacity": 5,
+    "dispatching_capacity": 2,
+    "worker_capacity": 6
+  },
+  "best_objective": -0.17175015597712487,
+  "aggregated_kpis": {
+    "n_orders_completed_mean": 969.3666666666667,
+    "n_orders_in_date_mean": 969.3666666666667,
+    "n_orders_late_mean": 0.0,
+    "n_orders_created_mean": 1002.6,
+    "n_orders_incomplete_mean": 33.233333333333334,
+    "late_order_fraction_mean": 0.0,
+    "time_in_system_mean_mean": 31.220598579326502,
+    "time_in_system_std_mean": 11.552227709770635,
+    "wip_time_in_system_mean_mean": 25.50143284985948,
+    "wip_time_in_system_std_mean": 14.341700839785176,
+    "wip_time_in_system_min_mean": 1.5694123145202032,
+    "wip_time_in_system_max_mean": 52.64134534033191,
+    "wip_mean_mean": 23.0013638774093,
+    "work_in_progress_mean_mean": 23.0013638774093,
+    "completed_norm_mean": 0.9668877052663164,
+    "late_total_norm_mean": 0.03311229473368362,
+    "on_time_loss_norm_mean": 0.03311229473368363,
+    "station_capacity_norm_mean": 0.5833333333333334,
+    "worker_capacity_norm_mean": 0.5555555555555556,
+    "time_in_system_mean_norm_mean": 0.08672388494257362,
+    "time_in_system_std_norm_mean": 0.03208952141602953,
+    "objective_completed_contribution_mean": -0.9668877052663164,
+    "objective_late_contribution_mean": 0.09933688420105087,
+    "objective_station_capacity_contribution_mean": 0.46666666666666673,
+    "objective_worker_capacity_contribution_mean": 0.1944444444444445,
+    "objective_time_mean_contribution_mean": 0.03468955397702945,
+    "objective_time_std_contribution_mean": 0.0
+  }
+}

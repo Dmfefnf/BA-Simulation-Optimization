@@ -1,6 +1,6 @@
 {
-  "N_TRIALS": 1,
-  "N_REPLICATIONS": 1,
+  "N_TRIALS": 30,
+  "N_REPLICATIONS": 30,
   "PARAMETER_BOUNDS": {
     "preparation_capacity": [
       1,
@@ -53,7 +53,12 @@
   "RANDOM_SEARCH_SEED": 54321,
   "METHOD": "random_search",
   "RUN_INDEX": 0,
-  "timestamp": "2026-06-08T22:57:21",
+  "SAVE_AFTER_EACH_TRIAL": false,
+  "LARGE_REPLICATION_FIELDS_REMOVED": [
+    "queue_preparation_length_resampled",
+    "queue_preparation_length_tx"
+  ],
+  "timestamp": "2026-06-10T00:02:52",
   "modules": {
     "random_search": "random_search.py",
     "simulation": "lab_analysis_simulation_BO.py"
