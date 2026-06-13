@@ -1,0 +1,15 @@
+{
+  "objective": "Ax minimizes -mean(total_reward); lower objective is better.",
+  "stage1_best_parameters": {
+    "alpha": 0.3220550875365734,
+    "gamma": 0.8607261352241039,
+    "epsilon_decay": 0.9855254992214962,
+    "epsilon_min": 0.17218870266340675,
+    "risk_t1": 45.18554946407676,
+    "risk_window": 282.50871897675097
+  },
+  "stage1_best_objective": -72.16666666666667,
+  "stage1_best_total_reward_mean": 72.16666666666667,
+  "stage1_best_trial_index": 1,
+  "stage2_final_results": []
+}

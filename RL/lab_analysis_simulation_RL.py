@@ -27,6 +27,8 @@ DAY = 24 * HOUR
 ANIMATION_SPEED = 2
 CONST_ARRIVAL_RATE = 500 / DAY
 DUE_RISK_THRESHOLD = 2 * HOUR
+DEFAULT_RISK_T1 = 0
+DEFAULT_RISK_WINDOW = 2 * HOUR
 DUE_DATE_LOWER_BOUND = 4
 DUE_DATE_UPPER_BOUND = 8
 RATE_MULTIPLIER = 0.9
@@ -79,6 +81,18 @@ def bin_fraction(x: float) -> int:
     return 2
 
 
+def lateness_risk(slack: float, risk_t1: float, risk_t2: float) -> float:
+    """Soft lateness-risk score: 1 at/under t1, 0 at/over t2."""
+
+    if risk_t2 <= risk_t1:
+        raise ValueError("risk_t2 must be greater than risk_t1.")
+    if slack <= risk_t1:
+        return 1.0
+    if slack >= risk_t2:
+        return 0.0
+    return float((risk_t2 - slack) / (risk_t2 - risk_t1))
+
+
 def select_order_by_rule(queue: sim.Queue, action: int, env: sim.Environment):
     """Map an action to a dispatching rule and return the selected order."""
 
@@ -99,14 +113,31 @@ def select_order_by_rule(queue: sim.Queue, action: int, env: sim.Environment):
             key=lambda order: (env.now() - order.queue_enter_time, -order.queue_enter_time),
         )
     if action == 3:
-        return min(
-            orders,
-            key=lambda order: (
-                (order.starting_time + order.due_date) - env.now(),
-                order.queue_enter_time,
-            ),
-        )
-    # Change desing of late risk by adding threshhold (threshold could be optimzized with BO)
+        risk_t1 = getattr(env, "risk_t1", DEFAULT_RISK_T1)
+        risk_t2 = getattr(env, "risk_t2", DEFAULT_RISK_T1 + DEFAULT_RISK_WINDOW)
+        scored_orders = []
+        for order in orders:
+            slack = (order.starting_time + order.due_date) - env.now()
+            risk = lateness_risk(slack, risk_t1, risk_t2)
+            waiting_time = env.now() - order.queue_enter_time
+            scored_orders.append((order, risk, waiting_time))
+
+        if any(risk > 0 for _, risk, _ in scored_orders):
+            return max(
+                scored_orders,
+                key=lambda item: (
+                    round(item[1], 6),
+                    item[2],
+                    -item[0].queue_enter_time,
+                ),
+            )[0]
+
+        # When no order is close to its due date, age the queue to avoid starvation
+        # instead of collapsing to EDD/FIFO for all-safe orders.
+        return max(
+            scored_orders,
+            key=lambda item: (item[2], -item[0].queue_enter_time),
+        )[0]
     raise ValueError(f"Unknown action {action}. Valid actions: {sorted(ACTION_NAMES)}")
 
 
@@ -384,6 +415,8 @@ def simulate_rl(
     dispatching_pt_low: float = 0.8,
     dispatching_pt_high: float = 1.2,
     dispatching_pt_mode: float = 1,
+    risk_t1: float = DEFAULT_RISK_T1,
+    risk_window: float = DEFAULT_RISK_WINDOW,
     q_learning_config: dict | None = None,
     **kwargs,
 ) -> dict:
@@ -393,9 +426,14 @@ def simulate_rl(
     """
 
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING)
+    if risk_window <= 0:
+        raise ValueError("risk_window must be positive so risk_t2 is greater than risk_t1.")
     seed = "*" if random_seed is None else random_seed
     env = sim.Environment(random_seed=seed)
     env.animation_parameters(animate=animate, speed=ANIMATION_SPEED, title="Lab RL Simulation")
+    env.risk_t1 = float(risk_t1)
+    env.risk_window = float(risk_window)
+    env.risk_t2 = env.risk_t1 + env.risk_window
 
     rl_agent = make_agent(agent, agent_type, fixed_action, None if seed == "*" else int(seed), q_learning_config)
     rl_agent.start_episode()
@@ -530,6 +568,9 @@ def simulate_rl(
         "due_date_lower_bound": DUE_DATE_LOWER_BOUND,
         "due_date_upper_bound": DUE_DATE_UPPER_BOUND,
         "rate_multiplier": rate_multiplier,
+        "risk_t1": env.risk_t1,
+        "risk_window": env.risk_window,
+        "risk_t2": env.risk_t2,
         "agent_type": agent_type,
         "training": training,
         "fixed_action": fixed_action if isinstance(rl_agent, BaselineAgent) else None,

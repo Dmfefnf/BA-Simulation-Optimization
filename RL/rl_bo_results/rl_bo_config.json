@@ -1,0 +1,86 @@
+{
+  "N_TRIALS": 30,
+  "STAGE1_TRAINING_EPISODES": 1000,
+  "FINAL_TRAINING_EPISODES": 10000,
+  "N_EVAL_REPLICATIONS": 30,
+  "N_FINAL_CONFIGS": 1,
+  "PARAMETER_BOUNDS": {
+    "alpha": [
+      0.02,
+      0.5
+    ],
+    "gamma": [
+      0.7,
+      0.99
+    ],
+    "epsilon_decay": [
+      0.98,
+      0.9999
+    ],
+    "epsilon_min": [
+      0.01,
+      0.2
+    ],
+    "risk_t1": [
+      -60.0,
+      120.0
+    ],
+    "risk_window": [
+      30.0,
+      360.0
+    ]
+  },
+  "OBJECTIVE": "minimize -mean(total_reward) over evaluation seeds",
+  "RUN_DURATION": 1440,
+  "RATE_MULTIPLIER": 0.9,
+  "BASE_SEED": 12345,
+  "SEED_STEP": 1000,
+  "BO_RANDOM_SEED": 24680,
+  "AGENT_RANDOM_SEED_OFFSET": 600000,
+  "EVAL_SEEDS": [
+    312345,
+    313345,
+    314345,
+    315345,
+    316345,
+    317345,
+    318345,
+    319345,
+    320345,
+    321345,
+    322345,
+    323345,
+    324345,
+    325345,
+    326345,
+    327345,
+    328345,
+    329345,
+    330345,
+    331345,
+    332345,
+    333345,
+    334345,
+    335345,
+    336345,
+    337345,
+    338345,
+    339345,
+    340345,
+    341345
+  ],
+  "DEFAULT_RISK_T1": 0,
+  "DEFAULT_RISK_WINDOW": 120,
+  "STATION_CAPACITIES": {
+    "preparation_capacity": 1,
+    "sorting_capacity": 1,
+    "analysis1_capacity": 1,
+    "analysis2_capacity": 1,
+    "evaluation_capacity": 1,
+    "dispatching_capacity": 1,
+    "worker_capacity": 1
+  },
+  "SAVE_AFTER_EACH_TRIAL": true,
+  "run_final_stage": true,
+  "timestamp": "2026-06-10T20:48:19"
+}

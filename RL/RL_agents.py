@@ -93,7 +93,11 @@ class QLearningAgent(BaseAgent):
     def select_action(self, state: tuple[int, ...], training: bool = True) -> int:
         if training and self.rng.random() < self.epsilon:
             return self.rng.randrange(self.n_actions)
-        q_values = self.q_table[state]
+
+        q_values = self.q_table[state] if training else self.q_table.get(state)
+        if q_values is None:
+            return self.rng.randrange(self.n_actions)
+
         best_value = np.max(q_values)
         best_actions: Iterable[int] = np.flatnonzero(q_values == best_value)
         return int(self.rng.choice(list(best_actions)))
