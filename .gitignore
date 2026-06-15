@@ -180,6 +180,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-#Errors and Outputs from HPC
+#Files from HPC
 *.out
 *.err
+*.slurm
+slurm_script.sh
+19
