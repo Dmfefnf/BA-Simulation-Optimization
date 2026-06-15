@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
-#SBATCH --partition=earth-1
+#SBATCH --partition=earth-3
 #SBATCH --time=00:30:00
 #SBATCH --constraint=rhel8
 #SBATCH --array=0-19
