@@ -58,6 +58,7 @@ BO_DIR="$PROJECT_ROOT/BO"
 RESULTS_DIR="$BO_DIR/multi_run_results"
 LOG_DIR="$BO_DIR/logs"
 VENV_PATH="/cfs/earth/scratch/freyfab2/ba_bo_env"
+PYTHON_BIN="$VENV_PATH/bin/python"
 
 mkdir -p "$LOG_DIR" "$RESULTS_DIR/bo"
 
@@ -80,6 +81,11 @@ if [ ! -d "$VENV_PATH" ]; then
 fi
 
 conda activate "$VENV_PATH"
+
+if [ ! -x "$PYTHON_BIN" ]; then
+    echo "ERROR: python executable not found at $PYTHON_BIN"
+    exit 1
+fi
 
 if [ ! -d "$BO_DIR" ]; then
     echo "ERROR: BO directory not found at $BO_DIR"
@@ -131,16 +137,22 @@ echo "Array Task: $RUN_INDEX"
 echo "Node: ${SLURMD_NODENAME:-local}"
 echo "Start Time: $(date)"
 echo "Python: $(which python)"
-python --version
+echo "Python bin: $PYTHON_BIN"
+"$PYTHON_BIN" --version
 echo "Output: $OUTPUT_DIR"
 echo "=============================================="
 
-python - <<'PY'
+"$PYTHON_BIN" - <<'PY'
+import ax
 import json
+import numpy
 import os
+import pandas
+import salabim
 
 import BO as bo
 
+print("Import check passed: ax, numpy, pandas, salabim, BO")
 
 def optional_float(name: str) -> float | None:
     value = os.environ[name].strip()
