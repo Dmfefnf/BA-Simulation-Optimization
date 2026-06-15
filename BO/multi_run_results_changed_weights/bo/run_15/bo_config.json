@@ -1,0 +1,66 @@
+{
+  "N_TRIALS": 30,
+  "N_REPLICATIONS": 30,
+  "PARAMETER_BOUNDS": {
+    "preparation_capacity": [
+      1,
+      5
+    ],
+    "sorting_capacity": [
+      1,
+      5
+    ],
+    "analysis1_capacity": [
+      1,
+      5
+    ],
+    "analysis2_capacity": [
+      1,
+      5
+    ],
+    "evaluation_capacity": [
+      1,
+      5
+    ],
+    "dispatching_capacity": [
+      1,
+      5
+    ],
+    "worker_capacity": [
+      1,
+      10
+    ]
+  },
+  "OBJECTIVE_WEIGHTS": {
+    "completed": 0.35,
+    "late_total": 0.8,
+    "station_capacity": 3.0,
+    "worker_capacity": 1.0,
+    "time_in_system_mean": 0.4,
+    "time_in_system_std": 0.2
+  },
+  "OBJECTIVE_TIME_MODE": "mean",
+  "VALID_OBJECTIVE_TIME_MODES": [
+    "mean",
+    "mean_std",
+    "none"
+  ],
+  "DUE_DATE_MEAN": 360,
+  "RUN_DURATION": 1440,
+  "RATE_MULTIPLIER": 0.5,
+  "BASE_SEED": 1512345,
+  "SEED_STEP": 1000,
+  "BO_RANDOM_SEED": 39680,
+  "METHOD": "bo",
+  "RUN_INDEX": 15,
+  "SAVE_AFTER_EACH_TRIAL": false,
+  "LARGE_REPLICATION_FIELDS_REMOVED": [
+    "queue_preparation_length_resampled",
+    "queue_preparation_length_tx"
+  ],
+  "timestamp": "2026-06-15T23:27:21",
+  "modules": {
+    "bo": "BO.py",
+    "simulation": "lab_analysis_simulation_BO.py"
+  }
+}
