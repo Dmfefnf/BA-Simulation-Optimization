@@ -1,0 +1,16 @@
+{
+  "objective": "Ax minimizes -mean(total_reward); lower is better.",
+  "late_fraction_note": "late_order_fraction_mean is recorded but not used in the objective. A later objective can add e.g. lambda * late_fraction.",
+  "stage1_best_trial_index": 2,
+  "stage1_best_objective": -588.0,
+  "stage1_best_total_reward_mean": 588.0,
+  "stage1_best_parameters": {
+    "alpha": 0.46879510521888734,
+    "gamma": 0.8330836376268417,
+    "epsilon_decay": 0.9997092041088268,
+    "epsilon_min": 0.04883494970388711,
+    "risk_t1": 94.69089651480317,
+    "risk_window": 269.9492330197245
+  },
+  "source_trial_dir": "C:\\Workspace ZHAW\\6. Semester\\BA\\BA-Simulation-Optimization\\RL\\rl_tuning_laptop\\stage1\\trial_002"
+}
