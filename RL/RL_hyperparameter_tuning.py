@@ -62,8 +62,9 @@ SAVE_AFTER_EACH_TRIAL = True
 PARAMETER_BOUNDS = {
     "alpha": (0.02, 0.5),
     "gamma": (0.70, 0.99),
-    "epsilon_decay": (0.980, 0.9999),
-    "epsilon_min": (0.01, 0.20),
+    # Slower decay keeps exploration alive for 1000-10000 episode Q-learning runs.
+    "epsilon_decay": (0.9990, 0.99995),
+    "epsilon_min": (0.01, 0.10),
     "risk_t1": (-1 * 60.0, 2 * 60.0),
     "risk_window": (0.5 * 60.0, 6 * 60.0),
 }
