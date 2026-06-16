@@ -40,9 +40,8 @@ TRAINING_SEED_OFFSET = 200_000
 EVAL_SEED_OFFSET = 300_000
 RANDOM_AGENT_ACTION_SEED_OFFSET = 500_000
 
-OUTPUT_DIR = BASE_DIR / "rl_results"
+OUTPUT_DIR = BASE_DIR / "rl_results_test"
 FINAL_OUTPUT_DIR = BASE_DIR / "rl_results_final_10000"
-SMOKE_OUTPUT_DIR = BASE_DIR / "rl_results_smoke"
 
 STATION_CAPACITIES = {
     "preparation_capacity": 1,
@@ -58,7 +57,7 @@ Q_LEARNING_CONFIG = {
     "alpha": 0.1,
     "gamma": 0.95,
     "epsilon": 1.0,
-    "epsilon_decay": 0.995,
+    "epsilon_decay": 0.999, # Default 0.995
     "epsilon_min": 0.05,
 }
 
@@ -249,10 +248,8 @@ def best_reward_from_frame(
     return result
 
 
-def resolve_output_path(output_dir: str | Path | None, final_run: bool, smoke_test: bool) -> Path:
+def resolve_output_path(output_dir: str | Path | None, final_run: bool) -> Path:
     if output_dir is None:
-        if smoke_test:
-            return SMOKE_OUTPUT_DIR
         if final_run:
             return FINAL_OUTPUT_DIR
         return OUTPUT_DIR
@@ -548,7 +545,6 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Use 10000 training episodes and the final-run output directory.",
     )
-    parser.add_argument("--smoke-test", action="store_true")
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--baseline-replications", type=int, default=N_BASELINE_REPLICATIONS)
     parser.add_argument("--random-replications", type=int, default=N_RANDOM_REPLICATIONS)
@@ -576,14 +572,8 @@ def main() -> None:
     if args.training_episodes is not None:
         n_training_episodes = args.training_episodes
 
-    if args.smoke_test:
-        n_training_episodes = 5 if args.training_episodes is None else n_training_episodes
-        args.baseline_replications = min(args.baseline_replications, 2)
-        args.random_replications = min(args.random_replications, 2)
-        args.eval_replications = min(args.eval_replications, 2)
-
-    run_mode = "smoke" if args.smoke_test else "final" if args.final_run else "standard"
-    output_path = resolve_output_path(args.output_dir, args.final_run, args.smoke_test)
+    run_mode = "final" if args.final_run else "standard"
+    output_path = resolve_output_path(args.output_dir, args.final_run)
     setup_logging(output_path)
     reset_csv_outputs(output_path)
 
