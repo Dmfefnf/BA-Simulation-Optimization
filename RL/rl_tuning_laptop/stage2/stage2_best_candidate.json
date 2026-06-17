@@ -24,7 +24,7 @@
     "best_evaluation_replication": 0,
     "best_evaluation_seed": 312345,
     "q_table_size": 23,
-    "candidate_dir": "/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL/rl_tuning_laptop/stage2/candidate_rank_01_trial_002",
+    "candidate_dir": "C:\\Workspace ZHAW\\6. Semester\\BA\\BA-Simulation-Optimization\\RL\\rl_tuning_laptop\\stage2\\candidate_rank_01_trial_002",
     "q_table_path": "C:\\Workspace ZHAW\\6. Semester\\BA\\BA-Simulation-Optimization\\RL\\rl_tuning_laptop\\stage2\\candidate_rank_01_trial_002\\q_table.pkl"
   }
 }
