@@ -11,15 +11,15 @@
 #SBATCH --partition=earth-3
 #SBATCH --time=02:00:00
 #SBATCH --constraint=rhel8
-#SBATCH --array=0-0
+#SBATCH --array=0-3
 #SBATCH --chdir=/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL
 
 # Output Configuration
 #SBATCH --output=logs/rl_stage2_%A_%a.out
 #SBATCH --error=logs/rl_stage2_%A_%a.err
 # Uncomment and adapt if desired.
-##SBATCH --mail-type=END,FAIL
-##SBATCH --mail-user=your.name@students.zhaw.ch
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=freyfab2@students.zhaw.ch
 
 set -e
 set -u
@@ -29,7 +29,7 @@ set -u
 # =============================================================================
 
 # For N_TOP=5, also change the SBATCH array line above to: #SBATCH --array=0-4
-N_TOP=1
+N_TOP=4
 TRAINING_EPISODES=1000
 EVAL_REPLICATIONS=10
 

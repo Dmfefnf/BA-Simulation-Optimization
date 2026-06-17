@@ -6,10 +6,10 @@
 #SBATCH --job-name=rl_stage1_bo
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=2
 #SBATCH --mem=16G
 #SBATCH --partition=earth-3
-#SBATCH --time=00:30:00
+#SBATCH --time=03:00:00
 #SBATCH --constraint=rhel8
 #SBATCH --chdir=/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL
 
@@ -17,8 +17,8 @@
 #SBATCH --output=logs/rl_stage1_bo_%j.out
 #SBATCH --error=logs/rl_stage1_bo_%j.err
 # Uncomment and adapt if desired.
-##SBATCH --mail-type=END,FAIL
-##SBATCH --mail-user=your.name@students.zhaw.ch
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=freyfab2@students.zhaw.ch
 
 set -e
 set -u
@@ -27,9 +27,9 @@ set -u
 # Editable Experiment Configuration
 # =============================================================================
 
-N_TRIALS=5
-TRAINING_EPISODES=50
-EVAL_REPLICATIONS=1
+N_TRIALS=30
+TRAINING_EPISODES=1000
+EVAL_REPLICATIONS=10
 
 BASE_SEED=12345
 SEED_STEP=1000
