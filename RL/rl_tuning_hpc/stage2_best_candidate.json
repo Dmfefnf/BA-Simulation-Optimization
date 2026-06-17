@@ -1,0 +1,4 @@
+{
+  "objective": "minimize -mean(total_reward); lower is better.",
+  "best_candidate": null
+}
