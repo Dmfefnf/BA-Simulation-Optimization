@@ -11,7 +11,7 @@
 #SBATCH --partition=earth-3
 #SBATCH --time=02:00:00
 #SBATCH --constraint=rhel8
-#SBATCH --array=0-3
+#SBATCH --array=0-4
 #SBATCH --chdir=/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL
 
 # Output Configuration
@@ -29,9 +29,9 @@ set -u
 # =============================================================================
 
 # For N_TOP=5, also change the SBATCH array line above to: #SBATCH --array=0-4
-N_TOP=4
-TRAINING_EPISODES=1000
-EVAL_REPLICATIONS=10
+N_TOP=5
+TRAINING_EPISODES=10000
+EVAL_REPLICATIONS=30
 
 BASE_SEED=12345
 SEED_STEP=1000
