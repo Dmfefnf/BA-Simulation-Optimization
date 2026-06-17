@@ -1,0 +1,58 @@
+{
+  "stage": "stage1_bo_trial",
+  "trial_index": 15,
+  "training_episodes": 1000,
+  "eval_replications": 10,
+  "parameters": {
+    "alpha": 0.02,
+    "gamma": 0.7,
+    "epsilon_decay": 0.999,
+    "epsilon_min": 0.1,
+    "risk_t1": -23.256676136023934,
+    "risk_window": 360.0
+  },
+  "run_duration": 1440.0,
+  "rate_multiplier": 0.9,
+  "base_seed": 12345,
+  "seed_step": 1000,
+  "agent_random_seed_offset": 600000,
+  "station_capacities": {
+    "preparation_capacity": 1,
+    "sorting_capacity": 1,
+    "analysis1_capacity": 1,
+    "analysis2_capacity": 1,
+    "evaluation_capacity": 1,
+    "dispatching_capacity": 1,
+    "worker_capacity": 1
+  },
+  "parameter_bounds": {
+    "alpha": [
+      0.02,
+      0.5
+    ],
+    "gamma": [
+      0.7,
+      0.99
+    ],
+    "epsilon_decay": [
+      0.999,
+      0.99995
+    ],
+    "epsilon_min": [
+      0.01,
+      0.1
+    ],
+    "risk_t1": [
+      -60.0,
+      120.0
+    ],
+    "risk_window": [
+      30.0,
+      360.0
+    ]
+  },
+  "parameter_bounds_note": "epsilon_decay is tuned in 0.9990..0.99995 so exploration decays gradually for 1000-10000 episode retraining runs.",
+  "default_risk_t1": 0,
+  "default_risk_window": 120,
+  "timestamp": "2026-06-17T17:01:46"
+}

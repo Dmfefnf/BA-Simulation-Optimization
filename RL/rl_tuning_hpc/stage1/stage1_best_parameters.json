@@ -1,0 +1,16 @@
+{
+  "objective": "Ax minimizes -mean(total_reward); lower is better.",
+  "late_fraction_note": "late_order_fraction_mean is recorded but not used in the objective. A later objective can add e.g. lambda * late_fraction.",
+  "stage1_best_trial_index": 20,
+  "stage1_best_objective": -116.2,
+  "stage1_best_total_reward_mean": 116.2,
+  "stage1_best_parameters": {
+    "alpha": 0.02,
+    "gamma": 0.7,
+    "epsilon_decay": 0.9999320129117404,
+    "epsilon_min": 0.01,
+    "risk_t1": 120.0,
+    "risk_window": 360.0
+  },
+  "source_trial_dir": "/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL/rl_tuning_hpc/stage1/trial_020"
+}

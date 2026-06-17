@@ -1,0 +1,30 @@
+{
+  "objective": "minimize -mean(total_reward); lower is better.",
+  "best_candidate": {
+    "candidate_rank": 1,
+    "source_trial_index": 2,
+    "alpha": 0.4687951052188873,
+    "gamma": 0.8330836376268417,
+    "epsilon_decay": 0.9997092041088268,
+    "epsilon_min": 0.0488349497038871,
+    "risk_t1": 94.69089651480316,
+    "risk_window": 269.9492330197245,
+    "stage1_objective_mean": "",
+    "stage1_total_reward_mean": "",
+    "objective_mean": -62.2,
+    "objective_std": 201.316114053937,
+    "total_reward_mean": 62.2,
+    "total_reward_std": 201.316114053937,
+    "late_order_fraction_mean": 0.47227877711385335,
+    "n_valid_replications": 10,
+    "best_training_reward": 1009.0,
+    "best_training_episode": 518,
+    "best_training_seed": 730345,
+    "best_evaluation_reward": 408.0,
+    "best_evaluation_replication": 0,
+    "best_evaluation_seed": 312345,
+    "q_table_size": 23,
+    "candidate_dir": "/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL/rl_tuning_laptop/stage2/candidate_rank_01_trial_002",
+    "q_table_path": "C:\\Workspace ZHAW\\6. Semester\\BA\\BA-Simulation-Optimization\\RL\\rl_tuning_laptop\\stage2\\candidate_rank_01_trial_002\\q_table.pkl"
+  }
+}
