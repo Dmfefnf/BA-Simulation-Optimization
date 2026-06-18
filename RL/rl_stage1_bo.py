@@ -25,6 +25,7 @@ except ImportError as exc:
 from RL_experiment import BASE_SEED, RATE_MULTIPLIER, RUN_DURATION, SEED_STEP, append_csv_row
 from rl_tuning_common import (
     DEFAULT_OUTPUT_ROOT,
+    LOG_PARAMETER_NAMES,
     PARAMETER_BOUNDS,
     PARAMETER_NAMES,
     base_run_config,
@@ -39,7 +40,7 @@ RUN_SINGLE_SCRIPT = BASE_DIR / "run_single_rl_bo_trial.py"
 BO_RANDOM_SEED = 24680
 STAGE1_FIELDS = [
     "trial_index",
-    *PARAMETER_NAMES,
+    *LOG_PARAMETER_NAMES,
     "objective_mean",
     "objective_std",
     "best_objective_so_far",
@@ -201,7 +202,7 @@ def save_best(output_dir: Path, rows: list[dict[str, Any]]) -> dict[str, Any]:
         "stage1_best_trial_index": best["trial_index"],
         "stage1_best_objective": best["objective_mean"],
         "stage1_best_total_reward_mean": best["total_reward_mean"],
-        "stage1_best_parameters": {name: best[name] for name in PARAMETER_NAMES},
+        "stage1_best_parameters": {name: best[name] for name in LOG_PARAMETER_NAMES},
         "source_trial_dir": best["trial_dir"],
     }
     write_json(output_dir / "stage1_best_parameters.json", result)
@@ -228,7 +229,7 @@ def run_stage1(args: argparse.Namespace) -> dict[str, Any]:
 
     for _ in range(args.n_trials):
         parameters, trial_index = ax_client.get_next_trial()
-        sanitized = sanitize_parameters(parameters)
+        sanitized = sanitize_parameters(parameters, args.training_episodes)
         summary = run_single_trial_process(trial_index, sanitized, args)
         best_objective_so_far = min(best_objective_so_far, summary["objective_mean"])
         row = trial_row(summary, best_objective_so_far)

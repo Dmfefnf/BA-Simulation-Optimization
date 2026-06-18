@@ -39,7 +39,7 @@ def parameters_from_args(args: argparse.Namespace) -> dict[str, Any]:
 def run_trial(args: argparse.Namespace) -> dict[str, Any]:
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
-    parameters = sanitize_parameters(parameters_from_args(args))
+    parameters = sanitize_parameters(parameters_from_args(args), args.training_episodes)
 
     config = {
         "stage": "stage1_bo_trial",

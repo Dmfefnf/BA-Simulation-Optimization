@@ -13,6 +13,7 @@ import pandas as pd
 from RL_experiment import BASE_SEED, RATE_MULTIPLIER, RUN_DURATION, SEED_STEP, append_csv_row
 from rl_tuning_common import (
     DEFAULT_OUTPUT_ROOT,
+    LOG_PARAMETER_NAMES,
     PARAMETER_NAMES,
     base_run_config,
     json_safe,
@@ -26,7 +27,7 @@ RUN_SINGLE_SCRIPT = BASE_DIR / "run_single_rl_stage2_candidate.py"
 STAGE2_FIELDS = [
     "candidate_rank",
     "source_trial_index",
-    *PARAMETER_NAMES,
+    *LOG_PARAMETER_NAMES,
     "stage1_objective_mean",
     "stage1_total_reward_mean",
     "objective_mean",
@@ -93,7 +94,10 @@ def run_single_candidate_process(
     args: argparse.Namespace,
 ) -> dict[str, Any]:
     trial_index = int(source_row["trial_index"])
-    parameters = sanitize_parameters({name: source_row[name] for name in PARAMETER_NAMES})
+    parameters = sanitize_parameters(
+        {name: source_row[name] for name in PARAMETER_NAMES},
+        args.training_episodes,
+    )
     out_dir = candidate_dir(args.output_dir, rank, trial_index)
     command = [
         sys.executable,

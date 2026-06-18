@@ -34,24 +34,32 @@ DEFAULT_OUTPUT_ROOT = BASE_DIR / "rl_tuning_laptop"
 AGENT_RANDOM_SEED_OFFSET = 600_000
 FAILED_RUN_PENALTY = 1e9
 
-# Bounds are intentionally compact for staged laptop/HPC use. The previous
-# lower epsilon_decay values consume exploration too quickly for 1k-10k episodes.
+# Bounds are intentionally compact for staged laptop/HPC use. Epsilon decay is
+# derived from target_final_epsilon and the training episode budget.
+# PARAMETER_BOUNDS = {
+#     "alpha": (0.02, 0.5),
+#     "gamma": (0.70, 0.99),
+#     "target_final_epsilon": (0.02, 0.40),
+#     "risk_t1": (-1 * 60.0, 2 * 60.0),
+#     "risk_window": (0.5 * 60.0, 6 * 60.0),
+# }
 PARAMETER_BOUNDS = {
-    "alpha": (0.02, 0.5),
-    "gamma": (0.70, 0.99),
-    "epsilon_decay": (0.9990, 0.99995),
-    "epsilon_min": (0.01, 0.10),
-    "risk_t1": (-1 * 60.0, 2 * 60.0),
-    "risk_window": (0.5 * 60.0, 6 * 60.0),
+    "alpha": (0.005, 0.5),
+    "gamma": (0.50, 0.99),
+    "target_final_epsilon": (0.005, 0.30),
+    "risk_t1": (0.0, 360.0),
+    "risk_window": (30.0, 1440.0),
 }
 PARAMETER_NAMES = list(PARAMETER_BOUNDS)
+DERIVED_PARAMETER_NAMES = ["epsilon_decay", "epsilon_min"]
+LOG_PARAMETER_NAMES = [*PARAMETER_NAMES, *DERIVED_PARAMETER_NAMES]
 
 TRAINING_FIELDS = [
     "episode",
     "training_seed",
     "q_table_size",
     "best_total_reward_so_far",
-    *PARAMETER_NAMES,
+    *LOG_PARAMETER_NAMES,
     *SIM_RESULT_FIELDS,
     "label",
     "error",
@@ -61,7 +69,7 @@ EVALUATION_FIELDS = [
     "eval_seed",
     "objective_value",
     "q_table_size",
-    *PARAMETER_NAMES,
+    *LOG_PARAMETER_NAMES,
     *CSV_FIELDS,
 ]
 
@@ -98,13 +106,27 @@ def resolve_path(path: str | Path | None, default: Path) -> Path:
     return BASE_DIR / result
 
 
-def sanitize_parameters(parameters: dict[str, Any]) -> dict[str, float]:
+def target_epsilon_decay(target_final_epsilon: float, training_episodes: int) -> float:
+    if training_episodes < 1:
+        raise ValueError("training_episodes must be >= 1.")
+    return float(target_final_epsilon ** (1.0 / training_episodes))
+
+
+def sanitize_parameters(
+    parameters: dict[str, Any],
+    training_episodes: int,
+) -> dict[str, float]:
     sanitized: dict[str, float] = {}
     for name, (lower, upper) in PARAMETER_BOUNDS.items():
         if name not in parameters:
             raise ValueError(f"Missing parameter '{name}'.")
         sanitized[name] = float(np.clip(float(parameters[name]), lower, upper))
     sanitized["risk_window"] = max(1.0, sanitized["risk_window"])
+    sanitized["epsilon_min"] = sanitized["target_final_epsilon"]
+    sanitized["epsilon_decay"] = target_epsilon_decay(
+        sanitized["target_final_epsilon"],
+        training_episodes,
+    )
     return sanitized
 
 
@@ -305,8 +327,9 @@ def base_run_config(args: argparse.Namespace) -> dict[str, Any]:
         "station_capacities": STATION_CAPACITIES,
         "parameter_bounds": PARAMETER_BOUNDS,
         "parameter_bounds_note": (
-            "epsilon_decay is tuned in 0.9990..0.99995 so exploration decays "
-            "gradually for 1000-10000 episode retraining runs."
+            "BO tunes target_final_epsilon. epsilon_min is fixed to "
+            "target_final_epsilon and epsilon_decay is computed as "
+            "target_final_epsilon ** (1 / training_episodes)."
         ),
         "default_risk_t1": DEFAULT_RISK_T1,
         "default_risk_window": DEFAULT_RISK_WINDOW,

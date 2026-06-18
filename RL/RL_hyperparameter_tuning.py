@@ -59,17 +59,24 @@ OUTPUT_DIR = BASE_DIR / "rl_bo_results"
 FAILED_RUN_PENALTY = 1e9
 SAVE_AFTER_EACH_TRIAL = True
 
+# PARAMETER_BOUNDS = {
+#     "alpha": (0.02, 0.5),
+#     "gamma": (0.70, 0.99),
+#     "target_final_epsilon": (0.02, 0.40),
+#     "risk_t1": (-1 * 60.0, 2 * 60.0),
+#     "risk_window": (0.5 * 60.0, 6 * 60.0),
+# }
 PARAMETER_BOUNDS = {
-    "alpha": (0.02, 0.5),
-    "gamma": (0.70, 0.99),
-    # Slower decay keeps exploration alive for 1000-10000 episode Q-learning runs.
-    "epsilon_decay": (0.9990, 0.99995),
-    "epsilon_min": (0.01, 0.10),
-    "risk_t1": (-1 * 60.0, 2 * 60.0),
-    "risk_window": (0.5 * 60.0, 6 * 60.0),
+    "alpha": (0.005, 0.5),
+    "gamma": (0.50, 0.99),
+    "target_final_epsilon": (0.005, 0.30),
+    "risk_t1": (0.0, 360.0),
+    "risk_window": (30.0, 1440.0),
 }
 
 PARAMETER_NAMES = list(PARAMETER_BOUNDS)
+DERIVED_PARAMETER_NAMES = ["epsilon_decay", "epsilon_min"]
+LOG_PARAMETER_NAMES = [*PARAMETER_NAMES, *DERIVED_PARAMETER_NAMES]
 TRIALS_CSV_NAME = "rl_bo_trials.csv"
 EVALUATION_CSV_NAME = "rl_bo_evaluation_records.csv"
 FINAL_RESULTS_CSV_NAME = "rl_bo_final_results.csv"
@@ -80,7 +87,7 @@ CONFIG_JSON_NAME = "rl_bo_config.json"
 TRIAL_FIELDS = [
     "stage",
     "trial_index",
-    *PARAMETER_NAMES,
+    *LOG_PARAMETER_NAMES,
     "objective_mean",
     "objective_std",
     "best_objective_so_far",
@@ -100,14 +107,14 @@ EVALUATION_FIELDS = [
     "replication",
     "eval_seed",
     "objective_value",
-    *PARAMETER_NAMES,
+    *LOG_PARAMETER_NAMES,
     *CSV_FIELDS,
 ]
 FINAL_RESULT_FIELDS = [
     "stage",
     "final_config_rank",
     "source_trial_index",
-    *PARAMETER_NAMES,
+    *LOG_PARAMETER_NAMES,
     "objective_mean",
     "objective_std",
     "total_reward_mean",
@@ -130,7 +137,7 @@ FINAL_TRAINING_FIELDS = [
     "episode",
     "best_total_reward_so_far",
     "q_table_size",
-    *PARAMETER_NAMES,
+    *LOG_PARAMETER_NAMES,
     *SIM_RESULT_FIELDS,
     "label",
     "error",
@@ -205,12 +212,26 @@ def build_ax_parameters() -> list[dict[str, Any]]:
     ]
 
 
-def sanitize_parameters(parameters: dict[str, Any]) -> dict[str, float]:
+def target_epsilon_decay(target_final_epsilon: float, training_episodes: int) -> float:
+    if training_episodes < 1:
+        raise ValueError("training_episodes must be >= 1.")
+    return float(target_final_epsilon ** (1.0 / training_episodes))
+
+
+def sanitize_parameters(
+    parameters: dict[str, Any],
+    training_episodes: int,
+) -> dict[str, float]:
     sanitized: dict[str, float] = {}
     for name, (lower, upper) in PARAMETER_BOUNDS.items():
         value = float(parameters[name])
         sanitized[name] = float(np.clip(value, lower, upper))
     sanitized["risk_window"] = max(1.0, sanitized["risk_window"])
+    sanitized["epsilon_min"] = sanitized["target_final_epsilon"]
+    sanitized["epsilon_decay"] = target_epsilon_decay(
+        sanitized["target_final_epsilon"],
+        training_episodes,
+    )
     return sanitized
 
 
@@ -403,7 +424,7 @@ def evaluate_trial(
     run_duration: float,
     rate_multiplier: float,
 ) -> dict[str, Any]:
-    sanitized = sanitize_parameters(parameters)
+    sanitized = sanitize_parameters(parameters, n_training_episodes)
     logging.info("Stage 1 trial %s parameters: %s", trial_index, sanitized)
 
     q_agent, best_training = train_agent(
@@ -520,6 +541,11 @@ def save_config(
         "N_EVAL_REPLICATIONS": args.eval_replications,
         "N_FINAL_CONFIGS": args.n_final_configs,
         "PARAMETER_BOUNDS": PARAMETER_BOUNDS,
+        "PARAMETER_BOUNDS_NOTE": (
+            "BO tunes target_final_epsilon. epsilon_min is fixed to "
+            "target_final_epsilon and epsilon_decay is computed as "
+            "target_final_epsilon ** (1 / training_episodes)."
+        ),
         "OBJECTIVE": "minimize -mean(total_reward) over evaluation seeds",
         "RUN_DURATION": args.run_duration,
         "RATE_MULTIPLIER": args.rate_multiplier,
@@ -548,7 +574,7 @@ def save_best_result(output_path: Path) -> dict[str, Any]:
     best = min(TRIAL_RECORDS, key=lambda record: record["objective_mean"])
     result = {
         "objective": "Ax minimizes -mean(total_reward); lower objective is better.",
-        "stage1_best_parameters": {name: best[name] for name in PARAMETER_NAMES},
+        "stage1_best_parameters": {name: best[name] for name in LOG_PARAMETER_NAMES},
         "stage1_best_objective": best["objective_mean"],
         "stage1_best_total_reward_mean": best["total_reward_mean"],
         "stage1_best_trial_index": best["trial_index"],
@@ -577,7 +603,10 @@ def run_final_stage(
     ]
 
     for rank, source_record in enumerate(best_records, start=1):
-        parameters = {name: float(source_record[name]) for name in PARAMETER_NAMES}
+        parameters = sanitize_parameters(
+            {name: float(source_record[name]) for name in PARAMETER_NAMES},
+            final_training_episodes,
+        )
         logging.info(
             "Stage 2 final rank %s from trial %s parameters: %s",
             rank,
