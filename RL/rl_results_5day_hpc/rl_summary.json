@@ -1,0 +1,26 @@
+{
+  "best_training_reward": {
+    "episode": 598,
+    "random_seed": 810345,
+    "total_reward": -10443.0
+  },
+  "best_q_evaluation_reward": {
+    "total_reward": -10810.0,
+    "replication": 26,
+    "eval_seed": 338345,
+    "random_seed": 338345
+  },
+  "baseline_mean_total_reward": {
+    "EDD": -11697.033333333333,
+    "FIFO": -11615.033333333333,
+    "Highest Lateness Risk": -11875.7,
+    "Longest Waiting Time": -11615.033333333333
+  },
+  "best_baseline_rule": {
+    "baseline_rule": "FIFO",
+    "mean_total_reward": -11615.033333333333
+  },
+  "random_agent_mean_total_reward": -11752.366666666667,
+  "q_learning_mean_total_reward": -11773.033333333333,
+  "q_learning_mean_late_order_fraction": 0.8994338121981554
+}
