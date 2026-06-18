@@ -30,7 +30,7 @@ from RL_experiment import (
 from lab_analysis_simulation_RL import DEFAULT_RISK_T1, DEFAULT_RISK_WINDOW, simulate_rl
 
 BASE_DIR = Path(__file__).resolve().parent
-DEFAULT_OUTPUT_ROOT = BASE_DIR / "rl_tuning_laptop"
+DEFAULT_OUTPUT_ROOT = BASE_DIR / "rl_tuning_hpc"
 AGENT_RANDOM_SEED_OFFSET = 600_000
 FAILED_RUN_PENALTY = 1e9
 
