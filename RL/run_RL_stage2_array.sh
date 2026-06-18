@@ -7,11 +7,12 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=32G
+#SBATCH --mem=64G
 #SBATCH --partition=earth-3
 #SBATCH --time=03:00:00
 #SBATCH --constraint=rhel8
 #SBATCH --array=0-4
+#SBATCH --exclusive
 #SBATCH --chdir=/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL
 
 # Output Configuration

@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=16G
 #SBATCH --partition=earth-3
-#SBATCH --time=04:00:00
+#SBATCH --time=12:00:00
 #SBATCH --constraint=rhel8
 #SBATCH --chdir=/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL
 
@@ -27,7 +27,7 @@ set -u
 # Editable Experiment Configuration
 # =============================================================================
 
-N_TRIALS=30
+N_TRIALS=60
 TRAINING_EPISODES=1000
 EVAL_REPLICATIONS=10
 
