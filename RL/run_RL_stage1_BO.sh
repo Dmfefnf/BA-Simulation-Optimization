@@ -27,7 +27,7 @@ set -u
 # Editable Experiment Configuration
 # =============================================================================
 
-N_TRIALS=60
+N_TRIALS=100
 TRAINING_EPISODES=1000
 EVAL_REPLICATIONS=10
 
