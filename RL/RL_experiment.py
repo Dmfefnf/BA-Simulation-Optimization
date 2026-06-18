@@ -40,7 +40,7 @@ TRAINING_SEED_OFFSET = 200_000
 EVAL_SEED_OFFSET = 300_000
 RANDOM_AGENT_ACTION_SEED_OFFSET = 500_000
 
-OUTPUT_DIR = BASE_DIR / "rl_results_test"
+OUTPUT_DIR = BASE_DIR / "rl_results"
 FINAL_OUTPUT_DIR = BASE_DIR / "rl_results_final_10000"
 
 STATION_CAPACITIES = {
@@ -57,7 +57,15 @@ Q_LEARNING_CONFIG = {
     "alpha": 0.1,
     "gamma": 0.95,
     "epsilon": 1.0,
-    "epsilon_decay": 0.999, # Default 0.995
+    "epsilon_decay": 0.995, # Default 0.995
+    "epsilon_min": 0.05,
+}
+# Implement a more aggressive epsilon decay for the 10k-episode final run to encourage more exploitation later in training
+Q_LEARNING_CONFIG_10K = {
+    "alpha": 0.1,
+    "gamma": 0.95,
+    "epsilon": 1.0,
+    "epsilon_decay": 0.9995, # Default 0.995
     "epsilon_min": 0.05,
 }
 
@@ -428,6 +436,7 @@ def save_config(
     output_path: Path,
     run_mode: str,
     n_training_episodes: int,
+    q_learning_config: dict[str, Any],
     eval_seeds: list[int],
     args: argparse.Namespace,
     simulation_kwargs: dict[str, Any],
@@ -454,7 +463,7 @@ def save_config(
             "separate deterministic seed per replication."
         ),
         "STATION_CAPACITIES": STATION_CAPACITIES,
-        "Q_LEARNING_CONFIG": Q_LEARNING_CONFIG,
+        "Q_LEARNING_CONFIG": q_learning_config,
         "RISK_CONFIG": {
             "risk_t1": simulation_kwargs["risk_t1"],
             "risk_window": simulation_kwargs["risk_window"],
@@ -573,6 +582,7 @@ def main() -> None:
         n_training_episodes = args.training_episodes
 
     run_mode = "final" if args.final_run else "standard"
+    q_learning_config = Q_LEARNING_CONFIG_10K if args.final_run else Q_LEARNING_CONFIG
     output_path = resolve_output_path(args.output_dir, args.final_run)
     setup_logging(output_path)
     reset_csv_outputs(output_path)
@@ -591,7 +601,15 @@ def main() -> None:
         "risk_window": args.risk_window,
         **STATION_CAPACITIES,
     }
-    save_config(output_path, run_mode, n_training_episodes, eval_seeds, args, simulation_kwargs)
+    save_config(
+        output_path,
+        run_mode,
+        n_training_episodes,
+        q_learning_config,
+        eval_seeds,
+        args,
+        simulation_kwargs,
+    )
 
     LOGGER.info(
         "Starting %s RL run with %s training episodes, %s evaluation replications",
@@ -618,7 +636,7 @@ def main() -> None:
             args.seed_step,
         )
 
-    q_agent = QLearningAgent(random_seed=args.base_seed, **Q_LEARNING_CONFIG)
+    q_agent = QLearningAgent(random_seed=args.base_seed, **q_learning_config)
     best_training = train_q_learning(
         q_agent,
         output_path,
