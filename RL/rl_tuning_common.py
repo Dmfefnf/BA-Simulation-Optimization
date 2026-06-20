@@ -56,10 +56,17 @@ FIXED_RISK_WINDOW = 758.004 # before 120.0
 #     "risk_t1": (0.0, 360.0),
 #     "risk_window": (30.0, 1440.0),
 # }
+# PARAMETER_BOUNDS = {
+#     "alpha": (0.005, 0.7),
+#     "gamma": (0.20, 0.95),
+#     "target_final_epsilon": (0.02, 0.22),
+#     "risk_t1": (40.0, 360.0),
+#     "risk_window": (120.0, 1800.0),
+# }
 PARAMETER_BOUNDS = {
-    "alpha": (0.005, 0.7),
+    "alpha": (0.001, 0.08),
     "gamma": (0.20, 0.95),
-    "target_final_epsilon": (0.02, 0.22),
+    "target_final_epsilon": (0.005, 0.08),
     "risk_t1": (40.0, 360.0),
     "risk_window": (120.0, 1800.0),
 }
