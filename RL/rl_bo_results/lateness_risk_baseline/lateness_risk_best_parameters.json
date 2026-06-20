@@ -1,0 +1,13 @@
+{
+  "objective": "Ax minimizes -mean(total_reward); lower objective is better.",
+  "best_trial_index": 21,
+  "best_objective": -362.8333333333333,
+  "best_total_reward_mean": 362.8333333333333,
+  "best_late_order_fraction_mean": 0.41968714741059715,
+  "best_parameters": {
+    "risk_t1": 175.76447689852776,
+    "risk_window": 758.0036248230721
+  },
+  "best_risk_t2": 933.7681017215998,
+  "n_valid_replications": 30
+}

@@ -1,0 +1,67 @@
+{
+  "experiment": "lateness_risk_baseline_bo",
+  "objective": "Ax minimizes -mean(total_reward); lower objective is better.",
+  "baseline_rule": "Highest Lateness Risk",
+  "fixed_action": 3,
+  "n_trials": 30,
+  "n_replications": 30,
+  "run_duration": 1440,
+  "rate_multiplier": 0.9,
+  "base_seed": 12345,
+  "seed_step": 1000,
+  "bo_random_seed": 24680,
+  "eval_seeds": [
+    312345,
+    313345,
+    314345,
+    315345,
+    316345,
+    317345,
+    318345,
+    319345,
+    320345,
+    321345,
+    322345,
+    323345,
+    324345,
+    325345,
+    326345,
+    327345,
+    328345,
+    329345,
+    330345,
+    331345,
+    332345,
+    333345,
+    334345,
+    335345,
+    336345,
+    337345,
+    338345,
+    339345,
+    340345,
+    341345
+  ],
+  "station_capacities": {
+    "preparation_capacity": 1,
+    "sorting_capacity": 1,
+    "analysis1_capacity": 1,
+    "analysis2_capacity": 1,
+    "evaluation_capacity": 1,
+    "dispatching_capacity": 1,
+    "worker_capacity": 1
+  },
+  "parameter_bounds": {
+    "risk_t1": [
+      40.0,
+      360.0
+    ],
+    "risk_window": [
+      120.0,
+      1800.0
+    ]
+  },
+  "default_risk_t1": 0,
+  "default_risk_window": 120,
+  "timestamp": "2026-06-20T18:35:05"
+}
