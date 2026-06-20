@@ -10,5 +10,5 @@
   - Make runs independent subprocesses
   - Change structure 1 script for stage 1 and 1 script for stage 2, maybe additional script for evaluation of stage 1 and to pass args to stage 2
 - Test if 10000 Episodes is possible -> if not: make scripts to run on HPC -->
-- Make Scripts for BO of Lateness Risk Baseline, and run optimization
-- 
+- Evaluate results of runs with fixed lateness risk
+- If no improvement, maybe implementation of optimization with 3-5 different trainings for top 20
