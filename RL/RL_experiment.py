@@ -56,7 +56,7 @@ STATION_CAPACITIES = {
 # Set USE_FIXED_RISK to False to use the simulation defaults below.
 USE_FIXED_RISK = True
 FIXED_RISK_T1 = 175.214912
-FIXED_RISK_WINDOW = 120.0
+FIXED_RISK_WINDOW = 120.0 # Alternative value: 758.004
 
 Q_LEARNING_CONFIG = {
     "alpha": 0.1,
