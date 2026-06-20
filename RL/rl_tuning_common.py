@@ -34,6 +34,12 @@ DEFAULT_OUTPUT_ROOT = BASE_DIR / "rl_tuning_hpc"
 AGENT_RANDOM_SEED_OFFSET = 600_000
 FAILED_RUN_PENALTY = 1e9
 
+# Set USE_FIXED_RISK to False to tune risk_t1 and risk_window together with the
+# Q-learning hyperparameters.
+USE_FIXED_RISK = True
+FIXED_RISK_T1 = 175.214912
+FIXED_RISK_WINDOW = 120.0
+
 # Bounds are intentionally compact for staged laptop/HPC use. Epsilon decay is
 # derived from target_final_epsilon and the training episode budget.
 # PARAMETER_BOUNDS = {
@@ -57,9 +63,18 @@ PARAMETER_BOUNDS = {
     "risk_t1": (40.0, 360.0),
     "risk_window": (120.0, 1800.0),
 }
-PARAMETER_NAMES = list(PARAMETER_BOUNDS)
+RISK_PARAMETER_NAMES = ["risk_t1", "risk_window"]
+PARAMETER_NAMES = [
+    name
+    for name in PARAMETER_BOUNDS
+    if not USE_FIXED_RISK or name not in RISK_PARAMETER_NAMES
+]
+ACTIVE_PARAMETER_BOUNDS = {
+    name: PARAMETER_BOUNDS[name]
+    for name in PARAMETER_NAMES
+}
 DERIVED_PARAMETER_NAMES = ["epsilon_decay", "epsilon_min"]
-LOG_PARAMETER_NAMES = [*PARAMETER_NAMES, *DERIVED_PARAMETER_NAMES]
+LOG_PARAMETER_NAMES = [*PARAMETER_BOUNDS, *DERIVED_PARAMETER_NAMES]
 
 TRAINING_FIELDS = [
     "episode",
@@ -124,10 +139,13 @@ def sanitize_parameters(
     training_episodes: int,
 ) -> dict[str, float]:
     sanitized: dict[str, float] = {}
-    for name, (lower, upper) in PARAMETER_BOUNDS.items():
+    for name, (lower, upper) in ACTIVE_PARAMETER_BOUNDS.items():
         if name not in parameters:
             raise ValueError(f"Missing parameter '{name}'.")
         sanitized[name] = float(np.clip(float(parameters[name]), lower, upper))
+    if USE_FIXED_RISK:
+        sanitized["risk_t1"] = float(FIXED_RISK_T1)
+        sanitized["risk_window"] = float(FIXED_RISK_WINDOW)
     sanitized["risk_window"] = max(1.0, sanitized["risk_window"])
     sanitized["epsilon_min"] = sanitized["target_final_epsilon"]
     sanitized["epsilon_decay"] = target_epsilon_decay(
@@ -332,11 +350,22 @@ def base_run_config(args: argparse.Namespace) -> dict[str, Any]:
         "seed_step": args.seed_step,
         "agent_random_seed_offset": AGENT_RANDOM_SEED_OFFSET,
         "station_capacities": STATION_CAPACITIES,
-        "parameter_bounds": PARAMETER_BOUNDS,
+        "use_fixed_risk": USE_FIXED_RISK,
+        "fixed_risk": {
+            "risk_t1": FIXED_RISK_T1,
+            "risk_window": FIXED_RISK_WINDOW,
+            "risk_t2": FIXED_RISK_T1 + FIXED_RISK_WINDOW,
+        },
+        "parameter_names": PARAMETER_NAMES,
+        "log_parameter_names": LOG_PARAMETER_NAMES,
+        "parameter_bounds": ACTIVE_PARAMETER_BOUNDS,
+        "all_parameter_bounds": PARAMETER_BOUNDS,
         "parameter_bounds_note": (
             "BO tunes target_final_epsilon. epsilon_min is fixed to "
             "target_final_epsilon and epsilon_decay is computed as "
-            "target_final_epsilon ** (1 / training_episodes)."
+            "target_final_epsilon ** (1 / training_episodes). When "
+            "use_fixed_risk is true, risk_t1 and risk_window are logged but "
+            "not included in the Ax search space."
         ),
         "default_risk_t1": DEFAULT_RISK_T1,
         "default_risk_window": DEFAULT_RISK_WINDOW,

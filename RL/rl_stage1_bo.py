@@ -24,9 +24,9 @@ except ImportError as exc:
 
 from RL_experiment import BASE_SEED, RATE_MULTIPLIER, RUN_DURATION, SEED_STEP, append_csv_row
 from rl_tuning_common import (
+    ACTIVE_PARAMETER_BOUNDS,
     DEFAULT_OUTPUT_ROOT,
     LOG_PARAMETER_NAMES,
-    PARAMETER_BOUNDS,
     PARAMETER_NAMES,
     base_run_config,
     json_safe,
@@ -78,7 +78,7 @@ def build_ax_parameters() -> list[dict[str, Any]]:
             "bounds": [float(lower), float(upper)],
             "value_type": "float",
         }
-        for name, (lower, upper) in PARAMETER_BOUNDS.items()
+        for name, (lower, upper) in ACTIVE_PARAMETER_BOUNDS.items()
     ]
 
 

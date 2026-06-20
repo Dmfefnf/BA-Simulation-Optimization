@@ -53,6 +53,11 @@ STATION_CAPACITIES = {
     "worker_capacity": 1,
 }
 
+# Set USE_FIXED_RISK to False to use the simulation defaults below.
+USE_FIXED_RISK = True
+FIXED_RISK_T1 = 175.214912
+FIXED_RISK_WINDOW = 120.0
+
 Q_LEARNING_CONFIG = {
     "alpha": 0.1,
     "gamma": 0.95,
@@ -70,8 +75,8 @@ Q_LEARNING_CONFIG_10K = {
 }
 
 RISK_CONFIG = {
-    "risk_t1": DEFAULT_RISK_T1,
-    "risk_window": DEFAULT_RISK_WINDOW,
+    "risk_t1": FIXED_RISK_T1 if USE_FIXED_RISK else DEFAULT_RISK_T1,
+    "risk_window": FIXED_RISK_WINDOW if USE_FIXED_RISK else DEFAULT_RISK_WINDOW,
 }
 
 BASELINE_ACTIONS = {
@@ -464,6 +469,11 @@ def save_config(
         ),
         "STATION_CAPACITIES": STATION_CAPACITIES,
         "Q_LEARNING_CONFIG": q_learning_config,
+        "USE_FIXED_RISK": USE_FIXED_RISK,
+        "FIXED_RISK_T1": FIXED_RISK_T1,
+        "FIXED_RISK_WINDOW": FIXED_RISK_WINDOW,
+        "DEFAULT_RISK_T1": DEFAULT_RISK_T1,
+        "DEFAULT_RISK_WINDOW": DEFAULT_RISK_WINDOW,
         "RISK_CONFIG": {
             "risk_t1": simulation_kwargs["risk_t1"],
             "risk_window": simulation_kwargs["risk_window"],
