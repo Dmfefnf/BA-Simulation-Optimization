@@ -38,7 +38,7 @@ FAILED_RUN_PENALTY = 1e9
 # Q-learning hyperparameters.
 USE_FIXED_RISK = True
 FIXED_RISK_T1 = 175.214912
-FIXED_RISK_WINDOW = 120.0
+FIXED_RISK_WINDOW = 758.004 # before 120.0
 
 # Bounds are intentionally compact for staged laptop/HPC use. Epsilon decay is
 # derived from target_final_epsilon and the training episode budget.
