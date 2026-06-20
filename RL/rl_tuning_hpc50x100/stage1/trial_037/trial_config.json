@@ -1,0 +1,89 @@
+{
+  "stage": "stage1_bo_trial",
+  "trial_index": 37,
+  "training_episodes": 100,
+  "eval_replications": 10,
+  "parameters": {
+    "alpha": 0.005,
+    "gamma": 0.2,
+    "target_final_epsilon": 0.09372049406835099,
+    "risk_t1": 175.214912,
+    "risk_window": 120.0,
+    "epsilon_min": 0.09372049406835099,
+    "epsilon_decay": 0.976603655829356
+  },
+  "run_duration": 1440.0,
+  "rate_multiplier": 0.9,
+  "base_seed": 12345,
+  "seed_step": 1000,
+  "agent_random_seed_offset": 600000,
+  "station_capacities": {
+    "preparation_capacity": 1,
+    "sorting_capacity": 1,
+    "analysis1_capacity": 1,
+    "analysis2_capacity": 1,
+    "evaluation_capacity": 1,
+    "dispatching_capacity": 1,
+    "worker_capacity": 1
+  },
+  "use_fixed_risk": true,
+  "fixed_risk": {
+    "risk_t1": 175.214912,
+    "risk_window": 120.0,
+    "risk_t2": 295.214912
+  },
+  "parameter_names": [
+    "alpha",
+    "gamma",
+    "target_final_epsilon"
+  ],
+  "log_parameter_names": [
+    "alpha",
+    "gamma",
+    "target_final_epsilon",
+    "risk_t1",
+    "risk_window",
+    "epsilon_decay",
+    "epsilon_min"
+  ],
+  "parameter_bounds": {
+    "alpha": [
+      0.005,
+      0.7
+    ],
+    "gamma": [
+      0.2,
+      0.95
+    ],
+    "target_final_epsilon": [
+      0.02,
+      0.22
+    ]
+  },
+  "all_parameter_bounds": {
+    "alpha": [
+      0.005,
+      0.7
+    ],
+    "gamma": [
+      0.2,
+      0.95
+    ],
+    "target_final_epsilon": [
+      0.02,
+      0.22
+    ],
+    "risk_t1": [
+      40.0,
+      360.0
+    ],
+    "risk_window": [
+      120.0,
+      1800.0
+    ]
+  },
+  "parameter_bounds_note": "BO tunes target_final_epsilon. epsilon_min is fixed to target_final_epsilon and epsilon_decay is computed as target_final_epsilon ** (1 / training_episodes). When use_fixed_risk is true, risk_t1 and risk_window are logged but not included in the Ax search space.",
+  "default_risk_t1": 0,
+  "default_risk_window": 120,
+  "timestamp": "2026-06-21T00:21:29"
+}
