@@ -55,3 +55,11 @@
 ### Bayesian Optimization Results
 
 ### Reinforcement Learning Results
+
+## Discussion
+- Interpretation of Results
+- Meaning of Results for Optimization Methods
+- Implications for Industrial Practice
+- Limitations and Future Work
+
+## Conclusion
