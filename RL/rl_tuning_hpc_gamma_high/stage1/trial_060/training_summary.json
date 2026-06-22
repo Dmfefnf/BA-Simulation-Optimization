@@ -1,0 +1,18 @@
+{
+  "training_episodes": 1000,
+  "n_training_failures": 0,
+  "best_training": {
+    "episode": 518,
+    "training_seed": 730345,
+    "total_reward": 1149.0
+  },
+  "last_training": {
+    "episode": 999,
+    "training_seed": 1211345,
+    "total_reward": 485.0,
+    "epsilon": 0.029304439351054447,
+    "q_table_size": 23
+  },
+  "final_epsilon": 0.029201073386881358,
+  "q_table_size": 23
+}
