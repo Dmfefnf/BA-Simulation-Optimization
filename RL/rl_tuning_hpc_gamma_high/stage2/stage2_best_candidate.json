@@ -1,0 +1,31 @@
+{
+  "objective": "minimize -mean(total_reward); lower is better.",
+  "best_candidate": {
+    "candidate_rank": 1,
+    "source_trial_index": 20,
+    "alpha": 0.0057414252433156,
+    "gamma": 0.8130354711803862,
+    "target_final_epsilon": 0.0005,
+    "risk_t1": 175.214912,
+    "risk_window": 758.004,
+    "epsilon_min": 0.0005,
+    "epsilon_decay": 0.999240198549462,
+    "stage1_objective_mean": -346.2,
+    "stage1_total_reward_mean": 346.2,
+    "objective_mean": -364.1666666666667,
+    "objective_std": 312.33239183361326,
+    "total_reward_mean": 364.1666666666667,
+    "total_reward_std": 312.33239183361326,
+    "late_order_fraction_mean": 0.4193585046431714,
+    "n_valid_replications": 30,
+    "best_training_reward": 1590.0,
+    "best_training_episode": 3549,
+    "best_training_seed": 3761345,
+    "best_evaluation_reward": 1243.0,
+    "best_evaluation_replication": 26,
+    "best_evaluation_seed": 338345,
+    "q_table_size": 25,
+    "candidate_dir": "/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL/rl_tuning_hpc_gamma_high/stage2/candidate_rank_01_trial_020",
+    "q_table_path": "/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL/rl_tuning_hpc_gamma_high/stage2/candidate_rank_01_trial_020/q_table.pkl"
+  }
+}
