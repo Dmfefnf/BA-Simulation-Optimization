@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=16G
-#SBATCH --partition=earth-3
+#SBATCH --partition=earth-1
 #SBATCH --time=12:00:00
 #SBATCH --constraint=rhel8
 #SBATCH --chdir=/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL
@@ -48,7 +48,7 @@ SKIP_COMPLETED=true
 
 PROJECT_ROOT="/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization"
 RL_DIR="$PROJECT_ROOT/RL"
-RESULTS_DIR="$RL_DIR/rl_tuning_hpc"
+RESULTS_DIR="$RL_DIR/rl_tuning_hpc_gamma_low"
 LOG_DIR="$RL_DIR/logs"
 VENV_PATH="/cfs/earth/scratch/freyfab2/ba_bo_env"
 PYTHON_BIN="$VENV_PATH/bin/python"
