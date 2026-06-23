@@ -13,9 +13,13 @@
 - Simulation Optimization Challenges
 - Benefits of Simulation Optimization
 
-### Bayesian Optimization
+### Optimization Algorithms
 
-### Reinforcement Learning
+#### Bayesian Optimization
+
+#### Reinforcement Learning
+
+#### Interplay BO and RL
 
 ## Methodology
 
@@ -55,6 +59,8 @@
 ### Bayesian Optimization Results
 
 ### Reinforcement Learning Results
+- BO in RL Hyperparameter Tuning
+- Pure RL Performance
 
 ## Discussion
 - Interpretation of Results
