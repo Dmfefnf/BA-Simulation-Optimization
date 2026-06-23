@@ -45,7 +45,7 @@ from lab_analysis_simulation_RL import DEFAULT_RISK_T1, DEFAULT_RISK_WINDOW, sim
 from rl_tuning_common import FAILED_RUN_PENALTY, PARAMETER_BOUNDS, write_json
 
 BASE_DIR = Path(__file__).resolve().parent
-DEFAULT_OUTPUT_DIR = BASE_DIR / "rl_bo_results" / "lateness_risk_baseline"
+DEFAULT_OUTPUT_DIR = BASE_DIR / "lateness_risk_bo_results" / "lateness_risk_baseline"
 BO_RANDOM_SEED = 24680
 N_TRIALS = 50
 N_REPLICATIONS = 30
