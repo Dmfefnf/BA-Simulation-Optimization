@@ -4,13 +4,13 @@
   "training_episodes": 1000,
   "eval_replications": 10,
   "parameters": {
-    "alpha": 0.02756830171657073,
-    "gamma": 0.8,
-    "target_final_epsilon": 0.028583112316071156,
+    "alpha": 0.04388818216166704,
+    "gamma": 0.16282852329120961,
+    "target_final_epsilon": 0.0005,
     "risk_t1": 175.214912,
     "risk_window": 758.004,
-    "epsilon_min": 0.028583112316071156,
-    "epsilon_decay": 0.9964513721013953
+    "epsilon_min": 0.0005,
+    "epsilon_decay": 0.9924279113496888
   },
   "run_duration": 1440.0,
   "rate_multiplier": 0.9,
@@ -52,8 +52,8 @@
       0.08
     ],
     "gamma": [
-      0.8,
-      0.99
+      0.0,
+      0.2
     ],
     "target_final_epsilon": [
       0.0005,
@@ -66,8 +66,8 @@
       0.08
     ],
     "gamma": [
-      0.8,
-      0.99
+      0.0,
+      0.2
     ],
     "target_final_epsilon": [
       0.0005,
@@ -85,5 +85,5 @@
   "parameter_bounds_note": "BO tunes target_final_epsilon. epsilon_min is fixed to target_final_epsilon and epsilon_decay is computed as target_final_epsilon ** (1 / training_episodes). When use_fixed_risk is true, risk_t1 and risk_window are logged but not included in the Ax search space.",
   "default_risk_t1": 0,
   "default_risk_window": 120,
-  "timestamp": "2026-06-22T05:27:36"
+  "timestamp": "2026-06-24T09:22:12"
 }

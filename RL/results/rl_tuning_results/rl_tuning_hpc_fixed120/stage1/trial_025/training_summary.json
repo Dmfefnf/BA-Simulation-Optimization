@@ -2,9 +2,9 @@
   "training_episodes": 1000,
   "n_training_failures": 0,
   "best_training": {
-    "episode": 718,
-    "training_seed": 930345,
-    "total_reward": 1217.0
+    "episode": 126,
+    "training_seed": 338345,
+    "total_reward": 1183.0
   },
   "last_training": {
     "episode": 999,

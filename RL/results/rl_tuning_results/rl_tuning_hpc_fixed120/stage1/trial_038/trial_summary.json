@@ -2,36 +2,36 @@
   "stage": "stage1_bo_trial",
   "trial_index": 38,
   "parameters": {
-    "alpha": 0.05710836276898865,
-    "gamma": 0.8,
-    "target_final_epsilon": 0.015897024694947616,
+    "alpha": 0.0045040642369202355,
+    "gamma": 0.3431710789378388,
+    "target_final_epsilon": 0.03402697552347683,
     "risk_t1": 175.214912,
-    "risk_window": 758.004,
-    "epsilon_min": 0.015897024694947616,
-    "epsilon_decay": 0.9958669413804732
+    "risk_window": 120.0,
+    "epsilon_min": 0.03402697552347683,
+    "epsilon_decay": 0.996625106128895
   },
   "training_episodes": 1000,
   "n_training_failures": 0,
   "best_training": {
-    "episode": 518,
-    "training_seed": 730345,
-    "total_reward": 1209.0
+    "episode": 934,
+    "training_seed": 1146345,
+    "total_reward": 1122.0
   },
   "last_training": {
     "episode": 999,
     "training_seed": 1211345,
     "total_reward": 605.0,
-    "epsilon": 0.0159630007126365,
-    "q_table_size": 24
+    "epsilon": 0.034142201831184535,
+    "q_table_size": 23
   },
-  "final_epsilon": 0.015897024694947623,
-  "q_table_size": 24,
+  "final_epsilon": 0.03402697552347844,
+  "q_table_size": 23,
   "objective": "minimize -mean(total_reward); late_order_fraction is recorded for later composite objectives",
-  "objective_mean": -318.2,
-  "objective_std": 218.3701241267017,
-  "total_reward_mean": 318.2,
-  "total_reward_std": 218.3701241267017,
-  "late_order_fraction_mean": 0.42633869770604055,
+  "objective_mean": -334.2,
+  "objective_std": 241.92413870651453,
+  "total_reward_mean": 334.2,
+  "total_reward_std": 241.92413870651453,
+  "late_order_fraction_mean": 0.4234724943709488,
   "n_valid_replications": 10,
   "eval_replications": 10,
   "eval_seeds": [
@@ -49,6 +49,6 @@
   "best_evaluation": {
     "replication": 0,
     "eval_seed": 312345,
-    "total_reward": 768.0
+    "total_reward": 848.0
   }
 }

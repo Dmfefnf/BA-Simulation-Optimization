@@ -9,10 +9,10 @@
   "last_training": {
     "episode": 999,
     "training_seed": 1211345,
-    "total_reward": 405.0,
-    "epsilon": 0.01477588809598934,
+    "total_reward": 505.0,
+    "epsilon": 0.07413511426465352,
     "q_table_size": 24
   },
-  "final_epsilon": 0.014713680274259932,
+  "final_epsilon": 0.07394228277101328,
   "q_table_size": 24
 }

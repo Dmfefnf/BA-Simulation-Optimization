@@ -85,5 +85,5 @@
   "parameter_bounds_note": "BO tunes target_final_epsilon. epsilon_min is fixed to target_final_epsilon and epsilon_decay is computed as target_final_epsilon ** (1 / training_episodes). When use_fixed_risk is true, risk_t1 and risk_window are logged but not included in the Ax search space.",
   "default_risk_t1": 0,
   "default_risk_window": 120,
-  "timestamp": "2026-06-21T22:01:50"
+  "timestamp": "2026-06-24T01:53:52"
 }
