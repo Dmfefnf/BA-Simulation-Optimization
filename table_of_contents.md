@@ -1,12 +1,15 @@
 # Table of Contents
 
 ## Introduction
+- State of Research
+- Research Question
+- Hypothesis
 
 ## Theoretical Background
 
 ### Discrete Event Simulation
 - Discrete Event Simulation in Manufacturing Systems
-- Simulation of Job Shop Scheduling
+- Simulation of dispatch Scheduling
 
 ### Simulation Optimization
 - Simulation Optimization Techniques
@@ -18,12 +21,21 @@
 #### Bayesian Optimization
 
 #### Reinforcement Learning
+- Reinforcement Learning in Manufacturing Systems
+- What possible RL algorithms can be used for simulation optimization?
+- Q-learning Algorithm
 
 #### Interplay BO and RL
+- If theory available, discuss the interplay between BO and RL in simulation optimization
+-> If not, first mention in the introduction that this is a research gap and then discuss it in the methodology section, where you explain how you will use BO to tune the hyperparameters of RL. 
 
 ## Methodology
 
 ### Simulation Model
+- Base Simulation Model
+- Simulation Model Parameters
+- BO Simulation Model
+- RL Simulation Model
 
 ### Hypothesis and Experimental Design
 
@@ -64,6 +76,8 @@
 
 ## Discussion
 - Interpretation of Results
+    - Bayesian Optimization Results
+    - Reinforcement Learning Results
 - Meaning of Results for Optimization Methods
 - Implications for Industrial Practice
 - Limitations and Future Work
