@@ -1,0 +1,2 @@
+comparison,metric,group_a,group_b,n_a,n_b,mean_a,mean_b,standard_error_a,standard_error_b,median_a,median_b,q1_a,q1_b,q3_a,q3_b,iqr_a,iqr_b,mean_difference_a_minus_b,median_difference_a_minus_b,test,alternative,test_statistic,p_value,alpha,significant
+H2: best BO total capacity under different objective weights,total_capacity,Default weights,Changed weights,20,20,28.15,11.3,0.5632378202014342,0.8081818450923295,28.5,11.5,26.0,7.0,30.0,13.0,4.0,6.0,16.849999999999998,17.0,Mann-Whitney U,two-sided,400.0,6.179351514161344e-08,0.05,True

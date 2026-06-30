@@ -1,0 +1,17 @@
+experiment,metric,n,mean,standard_error,median,q1,q3,iqr,min,max
+Default weights,total_capacity,20,28.15,0.5632378202014342,28.5,26.0,30.0,4.0,24.0,32.0
+Changed weights,total_capacity,20,11.3,0.8081818450923295,11.5,7.0,13.0,6.0,7.0,18.0
+Default weights,preparation_capacity,20,3.2,0.21275139927797615,3.0,2.0,4.0,2.0,2.0,5.0
+Changed weights,preparation_capacity,20,1.2,0.11697953037312038,1.0,1.0,1.0,0.0,1.0,3.0
+Default weights,sorting_capacity,20,4.3,0.127733274731701,4.0,4.0,5.0,1.0,3.0,5.0
+Changed weights,sorting_capacity,20,2.2,0.21275139927797615,2.0,1.0,3.0,2.0,1.0,4.0
+Default weights,analysis1_capacity,20,4.2,0.13764944032233703,4.0,4.0,5.0,1.0,3.0,5.0
+Changed weights,analysis1_capacity,20,1.95,0.18460484112942716,2.0,1.0,3.0,2.0,1.0,3.0
+Default weights,analysis2_capacity,20,3.55,0.25623796505756535,3.5,3.0,4.25,1.25,1.0,5.0
+Changed weights,analysis2_capacity,20,1.1,0.10000000000000002,1.0,1.0,1.0,0.0,1.0,3.0
+Default weights,evaluation_capacity,20,4.55,0.1352385806055747,5.0,4.0,5.0,1.0,3.0,5.0
+Changed weights,evaluation_capacity,20,1.3,0.1468977445995038,1.0,1.0,1.0,0.0,1.0,3.0
+Default weights,dispatching_capacity,20,1.45,0.1534686664402456,1.0,1.0,2.0,1.0,1.0,3.0
+Changed weights,dispatching_capacity,20,1.05,0.05000000000000001,1.0,1.0,1.0,0.0,1.0,2.0
+Default weights,worker_capacity,20,6.9,0.34716900176927323,7.0,6.0,7.5,1.5,5.0,10.0
+Changed weights,worker_capacity,20,2.5,0.2460209661583209,3.0,1.0,3.0,2.0,1.0,4.0
