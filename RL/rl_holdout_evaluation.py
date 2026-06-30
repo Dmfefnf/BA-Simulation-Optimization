@@ -204,6 +204,9 @@ def resolve_best_candidate_dir(tuning_dir: Path) -> tuple[Path, dict[str, Any]]:
 
 
 def make_policy_registry() -> list[PolicySpec]:
+    fixed120_dir = STANDARD_RESULTS_DIR / "rl_results_final_10000_hpc_120"
+    fixed120_kwargs = load_standard_simulation_kwargs(fixed120_dir)
+    fixed120_config_path = fixed120_dir / "rl_config.json"
     fixed758_dir = STANDARD_RESULTS_DIR / "rl_results_final_10000_hpc_758"
     fixed758_kwargs = load_standard_simulation_kwargs(fixed758_dir)
     fixed758_config_path = fixed758_dir / "rl_config.json"
@@ -244,7 +247,7 @@ def make_policy_registry() -> list[PolicySpec]:
             "manual_fixed120",
             "manual_q_learning",
             "Manual Q-learning fixed120",
-            STANDARD_RESULTS_DIR / "rl_results_final_10000_hpc_120",
+            fixed120_dir,
         ),
         (
             "manual_fixed758",
@@ -291,6 +294,18 @@ def make_policy_registry() -> list[PolicySpec]:
                 q_parameters=parameters,
             )
         )
+
+    policies.append(
+        PolicySpec(
+            policy_id="baseline_highest_lateness_risk_fixed120",
+            policy_group="baseline_fixed120",
+            policy_label="Highest Lateness Risk fixed120",
+            agent_type="baseline",
+            fixed_action=3,
+            simulation_kwargs=dict(fixed120_kwargs),
+            source_config_path=fixed120_config_path,
+        )
+    )
 
     return policies
 

@@ -11,7 +11,7 @@
 #SBATCH --partition=earth-1
 #SBATCH --time=02:00:00
 #SBATCH --constraint=rhel8
-#SBATCH --array=0-12
+#SBATCH --array=0-13
 #SBATCH --chdir=/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/RL
 
 # Output Configuration
