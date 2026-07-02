@@ -1,6 +1,5 @@
 policy_id,policy_label,policy_group,n,total_reward_mean,total_reward_se,total_reward_median,total_reward_q1,total_reward_q3,total_reward_iqr,total_reward_min,total_reward_max,late_order_fraction_mean,late_order_fraction_se,late_order_fraction_median
 manual_fixed120,Manual Q-learning fixed120,manual_q_learning,100,224.59,30.621059944443665,218.5,12.25,435.25,423.0,-557.0,876.0,0.44389501146987276,0.005369785829862607,0.44310336074728396
-baseline_highest_lateness_risk_fixed120,Highest Lateness Risk fixed120,baseline_fixed120,100,223.19,29.926201131139486,257.0,20.0,414.25,394.25,-397.0,848.0,0.4441840402546508,0.0052422484054157805,0.43839936920954065
 bo_tuned_fixed758,BO-tuned Q-learning fixed758,bo_tuned_q_learning,100,223.19,30.688426716653858,237.0,13.25,438.25,425.0,-497.0,876.0,0.44415299847499434,0.00538110546660537,0.4416143521665534
 baseline_highest_lateness_risk,Highest Lateness Risk,baseline_fixed758,100,223.19,29.926201131139486,257.0,20.0,414.25,394.25,-397.0,848.0,0.4441840402546508,0.0052422484054157805,0.43839936920954065
 bo_tuned_gamma_low,BO-tuned Q-learning gamma_low,bo_tuned_q_learning,100,221.59,31.0129041080019,237.5,10.0,435.25,425.25,-517.0,876.0,0.4444381231220425,0.005434245587877336,0.44206221814568525
