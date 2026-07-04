@@ -44,7 +44,7 @@ Further content details are available in `Documents/BA.pdf` and the presentation
 - `Documents/`: stored thesis documents, especially the PDF version.
 - `archive/`: old or no longer used files. This folder is kept only for traceability and is not part of the final reproduction workflow.
 
-The former `HPC-Examples/` folder was removed because those files were only examples for the final SLURM scripts.
+<!-- The former `HPC-Examples/` folder was removed because those files were only examples for the final SLURM scripts. -->
 
 ## Installation
 
@@ -301,3 +301,4 @@ Full reproduction of all RL experiments can take a long time depending on the HP
 - BO results should be interpreted relative to the chosen objective function and its weights.
 - RL results depend strongly on the state space, action space, reward function, seeds, and holdout protocol.
 - The final scientific conclusions should be read from the thesis and the final result folders, not from `archive/` or `old_unused_deprecated_results/`.
+- For possible future work, see the discussion chapter of the thesis, as well as comments in the closed issues of this repository. 
