@@ -23,7 +23,7 @@ The main hypotheses of the thesis are:
 - H3: A Q-learning agent achieves better simulation performance through dynamic dispatching decisions than fixed dispatching rules and a random agent.
 - H4: BO-based hyperparameter tuning improves the Q-learning agent compared with manually selected baseline hyperparameters.
 
-Further content details are available in `Documents/BA.pdf` and in the LaTeX source of the thesis.
+Further content details are available in `Documents/BA.pdf` and the presentation slides in `Documents/BA_Presentation.pdf`.
 
 ## Repository Structure
 
