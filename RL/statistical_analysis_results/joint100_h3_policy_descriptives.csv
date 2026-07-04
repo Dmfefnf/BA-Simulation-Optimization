@@ -1,7 +1,0 @@
-experiment,group,metric,n,mean,standard_error,median,q1,q3,iqr,min,max
-joint100,Q-learning,total_reward,30,81.5,58.72953299641512,46.5,-87.75,253.0,340.75,-589.0,963.0
-joint100,Random agent,total_reward,30,-27.833333333333332,54.55645780402725,-71.5,-188.25,129.0,317.25,-649.0,863.0
-joint100,Baseline: EDD,total_reward,30,27.5,55.91976497574474,42.5,-179.5,127.25,306.75,-589.0,943.0
-joint100,Baseline: FIFO,total_reward,30,109.5,51.57616285371222,58.5,-69.0,215.75,284.75,-469.0,763.0
-joint100,Baseline: Highest Lateness Risk,total_reward,30,-151.16666666666666,56.0748080658049,-179.0,-303.25,-76.0,227.25,-709.0,703.0
-joint100,Baseline: Longest Waiting Time,total_reward,30,109.5,51.57616285371222,58.5,-69.0,215.75,284.75,-469.0,763.0

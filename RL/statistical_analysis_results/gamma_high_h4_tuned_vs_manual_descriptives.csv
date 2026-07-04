@@ -1,3 +1,0 @@
-experiment,group,metric,n,mean,standard_error,median,q1,q3,iqr,min,max
-gamma_high,BO-tuned Q-learning,total_reward,30,364.1666666666667,57.02383214893744,369.0,170.25,516.75,346.5,-229.0,1243.0
-gamma_high,Manual Q-learning,total_reward,30,284.1666666666667,58.55613444572698,255.5,81.75,418.5,336.75,-229.0,1243.0

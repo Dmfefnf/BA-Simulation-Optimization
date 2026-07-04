@@ -1,3 +1,0 @@
-experiment,group,metric,n,mean,standard_error,median,q1,q3,iqr,min,max
-fixed758,BO-tuned Q-learning,total_reward,30,370.1666666666667,57.69852452013627,369.0,175.0,516.75,341.75,-229.0,1243.0
-fixed758,Manual Q-learning,total_reward,30,224.83333333333334,62.871280348982125,215.5,15.75,345.75,330.0,-329.0,1203.0

@@ -1,6 +1,0 @@
-policy_id,policy_label,policy_group,n,total_reward_mean,total_reward_se,total_reward_median,total_reward_q1,total_reward_q3,total_reward_iqr,total_reward_min,total_reward_max,late_order_fraction_mean,late_order_fraction_se,late_order_fraction_median
-bo_tuned_fixed758,BO-tuned Q-learning fixed758,bo_tuned_q_learning,100,223.19,30.688426716653858,237.0,13.25,438.25,425.0,-497.0,876.0,0.44415299847499434,0.00538110546660537,0.4416143521665534
-bo_tuned_gamma_low,BO-tuned Q-learning gamma_low,bo_tuned_q_learning,100,221.59,31.0129041080019,237.5,10.0,435.25,425.25,-517.0,876.0,0.4444381231220425,0.005434245587877336,0.44206221814568525
-bo_tuned_gamma_high,BO-tuned Q-learning gamma_high,bo_tuned_q_learning,100,218.79,30.96842411100687,237.5,10.0,435.25,425.25,-517.0,876.0,0.4449374798023934,0.0054254188454543675,0.44206221814568525
-bo_tuned_fixed120,BO-tuned Q-learning fixed120,bo_tuned_q_learning,100,210.99,29.93797795847983,192.5,12.25,407.5,395.25,-477.0,848.0,0.4463067319181638,0.00525824953960735,0.4476568207911491
-bo_tuned_joint100,BO-tuned Q-learning joint100,bo_tuned_q_learning,100,207.99,30.243608540909225,206.5,-16.75,419.25,436.0,-477.0,808.0,0.4468423660949529,0.005308966098539853,0.44808841099163677
