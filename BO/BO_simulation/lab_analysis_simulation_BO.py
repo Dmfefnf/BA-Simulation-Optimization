@@ -26,7 +26,8 @@ USE_HOURLY_ARRIVAL_RATES = True
 CONST_ARRIVAL_RATE = 500 / DAY  # Constant arrival rate of orders per day
 # Hourly arrival rates, to be used if USE_HOURLY_ARRIVAL_RATES is True
 BASE_DIR = Path(__file__).resolve().parent
-HOURLY_RATES_PATH = BASE_DIR / "hourly_arrival_rates.csv"
+DATA_DIR = BASE_DIR / "data"
+HOURLY_RATES_PATH = DATA_DIR / "hourly_arrival_rates.csv"
 HOURLY_ARRIVAL_RATES = np.loadtxt(HOURLY_RATES_PATH) / HOUR
 UPPER_BOUND = 8
 LOWER_BOUND = 4
@@ -35,7 +36,14 @@ LOWER_BOUND = 4
 
 def resolve_local_path(file_path):
     path = Path(file_path)
-    return path if path.is_absolute() else BASE_DIR / path
+    if path.is_absolute():
+        return path
+
+    base_path = BASE_DIR / path
+    if base_path.exists():
+        return base_path
+
+    return DATA_DIR / path
 
 
 class HourlyRateSource(sim.Component):

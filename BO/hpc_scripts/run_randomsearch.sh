@@ -1,22 +1,22 @@
 #!/bin/bash
 # =============================================================================
-# SLURM Job Configuration: Bayesian Optimization multi-run job array
+# SLURM Job Configuration: Random Search multi-run job array
 # =============================================================================
 
-#SBATCH --job-name=bo
+#SBATCH --job-name=randomsearch
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
-#SBATCH --partition=earth-3
+#SBATCH --partition=earth-1
 #SBATCH --time=00:30:00
 #SBATCH --constraint=rhel8
 #SBATCH --array=0-19
 #SBATCH --chdir=/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/BO
 
 # Output Configuration
-#SBATCH --output=logs/bo_%A_%a.out
-#SBATCH --error=logs/bo_%A_%a.err
+#SBATCH --output=/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/BO/results/randomsearch_%A_%a.out
+#SBATCH --error=/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization/BO/results/randomsearch_%A_%a.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=freyfab2@students.zhaw.ch
 
@@ -33,10 +33,10 @@ N_REPLICATIONS=30
 
 BASE_SIMULATION_SEED=12345
 RUN_SEED_STEP=100000
-BASE_BO_RANDOM_SEED=24680
+BASE_RANDOM_SEARCH_SEED=54321
 OPTIMIZER_SEED_STEP=1000
 
-# Leave empty to use the defaults from BO.py.
+# Leave empty to use the defaults from random_search.py.
 RUN_DURATION=""
 RATE_MULTIPLIER=""
 OBJECTIVE_TIME_MODE="mean"
@@ -55,12 +55,14 @@ OBJECTIVE_WEIGHT_TIME_IN_SYSTEM_STD=0.2
 
 PROJECT_ROOT="/cfs/earth/scratch/freyfab2/BA/BA-Simulation-Optimization"
 BO_DIR="$PROJECT_ROOT/BO"
-RESULTS_DIR="$BO_DIR/multi_run_results_changed_weights"
-LOG_DIR="$BO_DIR/logs"
+RESULTS_DIR="$BO_DIR/results/multi_run_results_changed_weights"
+LOG_DIR="$BO_DIR/results"
+OPTIMIZERS_DIR="$BO_DIR/experiments/optimizers"
+SIMULATION_DIR="$BO_DIR/BO_simulation"
 VENV_PATH="/cfs/earth/scratch/freyfab2/ba_bo_env"
 PYTHON_BIN="$VENV_PATH/bin/python"
 
-mkdir -p "$LOG_DIR" "$RESULTS_DIR/bo"
+mkdir -p "$LOG_DIR" "$RESULTS_DIR/random_search"
 
 module purge
 module load USS/2022
@@ -82,6 +84,8 @@ fi
 
 conda activate "$VENV_PATH"
 
+export PYTHONPATH="$OPTIMIZERS_DIR:$SIMULATION_DIR:${PYTHONPATH:-}"
+
 if [ ! -x "$PYTHON_BIN" ]; then
     echo "ERROR: python executable not found at $PYTHON_BIN"
     exit 1
@@ -102,15 +106,15 @@ if [ "$RUN_INDEX" -ge "$N_RUNS" ]; then
 fi
 
 RUN_LABEL=$(printf "run_%02d" "$RUN_INDEX")
-OUTPUT_DIR="$RESULTS_DIR/bo/$RUN_LABEL"
+OUTPUT_DIR="$RESULTS_DIR/random_search/$RUN_LABEL"
 
 BASE_SEED=$((BASE_SIMULATION_SEED + RUN_INDEX * RUN_SEED_STEP))
-BO_RANDOM_SEED=$((BASE_BO_RANDOM_SEED + RUN_INDEX * OPTIMIZER_SEED_STEP))
+RANDOM_SEARCH_SEED=$((BASE_RANDOM_SEARCH_SEED + RUN_INDEX * OPTIMIZER_SEED_STEP))
 
-if [ -f "$OUTPUT_DIR/bo_best_parameters.json" ] \
-    && [ -f "$OUTPUT_DIR/bo_trials.csv" ] \
-    && [ -f "$OUTPUT_DIR/bo_replications.csv" ]; then
-    echo "Skipping completed BO run $RUN_INDEX at $OUTPUT_DIR."
+if [ -f "$OUTPUT_DIR/random_search_best_parameters.json" ] \
+    && [ -f "$OUTPUT_DIR/random_search_trials.csv" ] \
+    && [ -f "$OUTPUT_DIR/random_search_replications.csv" ]; then
+    echo "Skipping completed random-search run $RUN_INDEX at $OUTPUT_DIR."
     exit 0
 fi
 
@@ -118,7 +122,7 @@ export RUN_INDEX
 export N_TRIALS
 export N_REPLICATIONS
 export BASE_SEED
-export BO_RANDOM_SEED
+export RANDOM_SEARCH_SEED
 export OUTPUT_DIR
 export RUN_DURATION
 export RATE_MULTIPLIER
@@ -131,7 +135,7 @@ export OBJECTIVE_WEIGHT_TIME_IN_SYSTEM_MEAN
 export OBJECTIVE_WEIGHT_TIME_IN_SYSTEM_STD
 
 echo "=============================================="
-echo "Bayesian Optimization Run"
+echo "Random Search Run"
 echo "Job ID: ${SLURM_JOB_ID:-local}"
 echo "Array Task: $RUN_INDEX"
 echo "Node: ${SLURMD_NODENAME:-local}"
@@ -150,9 +154,9 @@ import os
 import pandas
 import salabim
 
-import BO as bo
+import random_search
 
-print("Import check passed: ax, numpy, pandas, salabim, BO")
+print("Import check passed: ax, numpy, pandas, salabim, random_search")
 
 def optional_float(name: str) -> float | None:
     value = os.environ[name].strip()
@@ -162,7 +166,7 @@ def optional_float(name: str) -> float | None:
 run_index = int(os.environ["RUN_INDEX"])
 output_dir = os.environ["OUTPUT_DIR"]
 
-bo.OBJECTIVE_WEIGHTS.update(
+random_search.OBJECTIVE_WEIGHTS.update(
     {
         "completed": float(os.environ["OBJECTIVE_WEIGHT_COMPLETED"]),
         "late_total": float(os.environ["OBJECTIVE_WEIGHT_LATE_TOTAL"]),
@@ -175,12 +179,12 @@ bo.OBJECTIVE_WEIGHTS.update(
     }
 )
 
-result = bo.run_experiment(
+result = random_search.run_experiment(
     n_trials=int(os.environ["N_TRIALS"]),
     n_replications=int(os.environ["N_REPLICATIONS"]),
     base_seed=int(os.environ["BASE_SEED"]),
-    seed_step=bo.SEED_STEP,
-    bo_random_seed=int(os.environ["BO_RANDOM_SEED"]),
+    seed_step=random_search.SEED_STEP,
+    random_search_seed=int(os.environ["RANDOM_SEARCH_SEED"]),
     output_dir=output_dir,
     run_index=run_index,
     run_duration=optional_float("RUN_DURATION"),
@@ -190,11 +194,11 @@ result = bo.run_experiment(
     return_records=False,
 )
 
-print(json.dumps(bo.json_safe(result["best_result"]), indent=2))
+print(json.dumps(random_search.json_safe(result["best_result"]), indent=2))
 PY
 
 echo "=============================================="
-echo "BO run completed: $(date)"
+echo "Random-search run completed: $(date)"
 echo "Output directory: $OUTPUT_DIR"
-echo "Combine later with: python combine_multi_run_results.py"
+echo "Combine later with: python experiments/multi_run/combine_multi_run_results.py"
 echo "=============================================="

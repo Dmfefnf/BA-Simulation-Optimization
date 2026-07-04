@@ -16,8 +16,9 @@ BASE_BO_RANDOM_SEED = 24_680
 BO_RANDOM_SEED_STEP = 1_000
 
 BASE_DIR = Path(__file__).resolve().parent
-RESULTS_DIR = BASE_DIR / MULTI_RUN_OUTPUT_DIR
-RUN_SINGLE_SCRIPT = BASE_DIR / "run_single_bo.py"
+BO_ROOT = Path(__file__).resolve().parents[2]
+RESULTS_DIR = BO_ROOT / "results" / MULTI_RUN_OUTPUT_DIR
+RUN_SINGLE_SCRIPT = BO_ROOT / "experiments" / "single_run" / "run_single_bo.py"
 
 
 def run_output_dir(run_index: int) -> Path:
@@ -74,7 +75,7 @@ def run_all(
         subprocess.run(
             build_run_command(run_index, n_trials, n_replications),
             check=True,
-            cwd=BASE_DIR,
+            cwd=BO_ROOT,
         )
 
     if COMBINE_AFTER_RUNS:
@@ -92,7 +93,10 @@ def main() -> None:
     run_all()
     print(f"BO run folders written to {RESULTS_DIR / 'bo'}", flush=True)
     if not COMBINE_AFTER_RUNS:
-        print("Combine results later with: python combine_multi_run_results.py", flush=True)
+        print(
+            "Combine results later with: python experiments/multi_run/combine_multi_run_results.py",
+            flush=True,
+        )
 
 
 if __name__ == "__main__":

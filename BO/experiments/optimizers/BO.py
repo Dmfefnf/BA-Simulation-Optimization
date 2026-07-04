@@ -2,6 +2,7 @@ import json
 import logging
 import math
 import random
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,14 @@ except ImportError as exc:
         "Ax Platform is required for BO.py. Install it with `pip install ax-platform` "
         "in the project environment."
     ) from exc
+
+BASE_DIR = Path(__file__).resolve().parent
+BO_ROOT = Path(__file__).resolve().parents[2]
+RESULTS_ROOT = BO_ROOT / "results"
+SIMULATION_DIR = BO_ROOT / "BO_simulation"
+
+if str(SIMULATION_DIR) not in sys.path:
+    sys.path.insert(0, str(SIMULATION_DIR))
 
 try:
     from lab_analysis_simulation_BO import DAY, simulate
@@ -68,8 +77,7 @@ PARAMETER_BOUNDS = {
 # Copy the shared defaults so local experiments can override weights here.
 OBJECTIVE_WEIGHTS = DEFAULT_OBJECTIVE_WEIGHTS.copy()
 
-BASE_DIR = Path(__file__).resolve().parent
-OUTPUT_PATH = BASE_DIR / OUTPUT_DIR
+OUTPUT_PATH = RESULTS_ROOT / OUTPUT_DIR
 TRIALS_CSV = OUTPUT_PATH / "bo_trials.csv"
 REPLICATIONS_CSV = OUTPUT_PATH / "bo_replications.csv"
 BEST_PARAMETERS_JSON = OUTPUT_PATH / "bo_best_parameters.json"
@@ -103,7 +111,7 @@ def configure_output_paths(output_dir: str | Path) -> None:
 
     output_path = Path(output_dir)
     if not output_path.is_absolute():
-        output_path = BASE_DIR / output_path
+        output_path = RESULTS_ROOT / output_path
 
     OUTPUT_DIR = str(output_dir)
     OUTPUT_PATH = output_path

@@ -6,7 +6,8 @@ import pandas as pd
 
 MULTI_RUN_OUTPUT_DIR = "multi_run_results"
 BASE_DIR = Path(__file__).resolve().parent
-RESULTS_DIR = BASE_DIR / MULTI_RUN_OUTPUT_DIR
+BO_ROOT = Path(__file__).resolve().parents[2]
+RESULTS_DIR = BO_ROOT / "results" / MULTI_RUN_OUTPUT_DIR
 SUMMARY_CSV = RESULTS_DIR / "summary.csv"
 
 PARAMETER_COLUMNS = [

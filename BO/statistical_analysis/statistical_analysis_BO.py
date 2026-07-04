@@ -17,12 +17,14 @@ from scipy import stats
 ALPHA = 0.05
 
 BASE_DIR = Path(__file__).resolve().parent
+BO_ROOT = BASE_DIR.parent
+RESULTS_ROOT = BO_ROOT / "results"
 
 # Main BO/Random Search result sets.
-DEFAULT_RESULTS_DIR = BASE_DIR / "multi_run_results"
-CHANGED_WEIGHTS_RESULTS_DIR = BASE_DIR / "multi_run_results_changed_weights"
+DEFAULT_RESULTS_DIR = RESULTS_ROOT / "multi_run_results"
+CHANGED_WEIGHTS_RESULTS_DIR = RESULTS_ROOT / "multi_run_results_changed_weights"
 
-OUTPUT_DIR = BASE_DIR / "statistical_analysis_results"
+OUTPUT_DIR = RESULTS_ROOT / "statistical_analysis_results"
 
 
 def standard_error(values: pd.Series) -> float:

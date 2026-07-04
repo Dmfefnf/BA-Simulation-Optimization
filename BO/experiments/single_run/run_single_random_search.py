@@ -1,20 +1,35 @@
 import argparse
 import json
+import sys
 from pathlib import Path
 
-import BO as bo
+BO_ROOT = Path(__file__).resolve().parents[2]
+OPTIMIZERS_DIR = BO_ROOT / "experiments" / "optimizers"
+
+if str(OPTIMIZERS_DIR) not in sys.path:
+    sys.path.insert(0, str(OPTIMIZERS_DIR))
+
+import random_search
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run one independent Bayesian-optimization run."
+        description="Run one independent random-search optimization run."
     )
     parser.add_argument("--run-index", type=int, required=True)
-    parser.add_argument("--n-trials", type=int, default=bo.N_TRIALS)
-    parser.add_argument("--n-replications", type=int, default=bo.N_REPLICATIONS)
-    parser.add_argument("--base-seed", type=int, default=bo.BASE_SEED)
-    parser.add_argument("--seed-step", type=int, default=bo.SEED_STEP)
-    parser.add_argument("--bo-random-seed", type=int, default=bo.BO_RANDOM_SEED)
+    parser.add_argument("--n-trials", type=int, default=random_search.N_TRIALS)
+    parser.add_argument(
+        "--n-replications",
+        type=int,
+        default=random_search.N_REPLICATIONS,
+    )
+    parser.add_argument("--base-seed", type=int, default=random_search.BASE_SEED)
+    parser.add_argument("--seed-step", type=int, default=random_search.SEED_STEP)
+    parser.add_argument(
+        "--random-search-seed",
+        type=int,
+        default=random_search.RANDOM_SEARCH_SEED,
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--run-duration", type=float, default=None)
     parser.add_argument("--rate-multiplier", type=float, default=None)
@@ -24,12 +39,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    result = bo.run_experiment(
+    result = random_search.run_experiment(
         n_trials=args.n_trials,
         n_replications=args.n_replications,
         base_seed=args.base_seed,
         seed_step=args.seed_step,
-        bo_random_seed=args.bo_random_seed,
+        random_search_seed=args.random_search_seed,
         output_dir=args.output_dir,
         run_index=args.run_index,
         run_duration=args.run_duration,
@@ -38,7 +53,7 @@ def main() -> None:
         save_after_each_trial=False,
         return_records=False,
     )
-    print(json.dumps(bo.json_safe(result["best_result"]), indent=2))
+    print(json.dumps(random_search.json_safe(result["best_result"]), indent=2))
 
 
 if __name__ == "__main__":
